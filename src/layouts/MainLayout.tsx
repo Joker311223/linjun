@@ -232,7 +232,7 @@ const MainLayout: React.FC = () => {
         <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #f0f0f0', padding: '0 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', width: '100%' }}>
             <Image width={200} src="/logo2.png" />
-            {!collapsed && <h1 style={{ color: token.colorPrimary, fontSize: '18px', margin: '0 0 0 12px' }}>营销平台</h1>}
+            {!collapsed && <h1 style={{ color: token.colorPrimary, fontSize: '18px', margin: '0 0 0 12px' }}>线上营销平台</h1>}
           </div>
         </div>
         <Menu

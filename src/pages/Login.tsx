@@ -48,7 +48,7 @@ const Login: React.FC = () => {
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <Image width={200} src="/logo2.png" />
           {/* <Title level={2} style={{ color: '#1890ff' }}>拓天科技</Title> */}
-          <Title level={4} style={{ marginTop: 8 }}>营销管理平台</Title>
+          <Title level={4} style={{ marginTop: 8 }}>互联网线上营销管理平台</Title>
         </div>
         <Form
           name="login"

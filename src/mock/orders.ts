@@ -57,6 +57,7 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
 
     orders.push({
       id: `ORD${Random.string('number', 8)}`,
+      orderNo: `ORD${Random.string('number', 12)}`,
       userId: Random.integer(1, 1000),
       userName: Random.cname(),
       packageId: Random.integer(1, 50),
@@ -65,9 +66,10 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
       price,
       quantity,
       amount,
+      payAmount: Random.float(price * 0.7, price, 2, 2),
       discount: Random.float(0, price * 0.3, 2, 2),
       paymentMethodId: paymentMethod.id,
-      paymentMethodName: paymentMethod.name,
+      paymentMethod: paymentMethod.name,
       status: status.id,
       statusName: status.name,
       statusColor: status.color,
@@ -259,6 +261,109 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
       completeTime: completeTime ? Random.datetime('yyyy-MM-dd HH:mm:ss') : null,
       remark: Random.boolean() ? Random.paragraph(1) : null,
       logs
+    }
+  };
+});
+
+// 订单统计数据
+Mock.mock(/\/api\/orders\/statistics(\?.*)?$/, 'get', (options: any) => {
+  // 解析查询参数
+  const url = new URL(options.url, 'http://localhost');
+  const startDate = url.searchParams.get('startDate') || '';
+  const endDate = url.searchParams.get('endDate') || '';
+  const timeUnit = url.searchParams.get('timeUnit') || 'day';
+
+  // 生成日期数组
+  const dates = [];
+  const amounts = [];
+  const orders = [];
+  const retentionRates = [];
+
+  // 根据时间单位生成不同的日期范围
+  let daysCount = 30; // 默认30天
+
+  if (timeUnit === 'week') {
+    daysCount = 12; // 12周
+  } else if (timeUnit === 'month') {
+    daysCount = 12; // 12个月
+  }
+
+  for (let i = 0; i < daysCount; i++) {
+    const date = new Date();
+    if (timeUnit === 'day') {
+      date.setDate(date.getDate() - (daysCount - 1 - i));
+      dates.push(date.toISOString().split('T')[0]);
+    } else if (timeUnit === 'week') {
+      date.setDate(date.getDate() - (daysCount - 1 - i) * 7);
+      dates.push(`第${i + 1}周`);
+    } else if (timeUnit === 'month') {
+      date.setMonth(date.getMonth() - (daysCount - 1 - i));
+      dates.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+    }
+
+    // 生成随机数据
+    amounts.push(Random.float(10000, 50000, 2, 2));
+    orders.push(Random.integer(100, 500));
+    retentionRates.push(Random.float(60, 95, 1, 1));
+  }
+
+  // 生成套餐销售分布数据
+  const packageData = {
+    names: ['流量套餐', '通话套餐', '短信套餐', '增值服务', '组合套餐'],
+    values: [
+      Random.integer(100, 500),
+      Random.integer(80, 400),
+      Random.integer(50, 300),
+      Random.integer(30, 200),
+      Random.integer(70, 350)
+    ]
+  };
+
+  // 生成支付方式分布数据
+  const payMethodData = {
+    methods: ['微信支付', '支付宝', '银行卡', '余额支付'],
+    values: [
+      Random.integer(200, 600),
+      Random.integer(150, 500),
+      Random.integer(50, 200),
+      Random.integer(20, 100)
+    ]
+  };
+
+  return {
+    code: 200,
+    message: '获取成功',
+    data: {
+      totalAmount: Random.float(100000, 500000, 2, 2),
+      totalOrders: Random.integer(1000, 5000),
+      activeUsers: Random.integer(500, 2000),
+      retentionRate: Random.float(70, 90, 1, 1),
+      comparedToLastPeriod: {
+        amount: Random.float(-20, 50, 1, 1),
+        orders: Random.float(-15, 40, 1, 1),
+        activeUsers: Random.float(-10, 30, 1, 1),
+        retentionRate: Random.float(-5, 15, 1, 1)
+      },
+      timeData: {
+        dates,
+        amounts,
+        orders,
+        retentionRates
+      },
+      packageData,
+      payMethodData,
+      regionData: {
+        regions: ['华东', '华南', '华北', '华中', '西南', '西北', '东北'],
+        values: [
+          Random.integer(100, 500),
+          Random.integer(80, 400),
+          Random.integer(120, 450),
+          Random.integer(70, 350),
+          Random.integer(60, 300),
+          Random.integer(40, 200),
+          Random.integer(30, 150)
+        ]
+      }
     }
   };
 });
