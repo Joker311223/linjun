@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Button, theme, Breadcrumb } from 'antd';
+import { Layout, Menu,Image, Avatar, Dropdown, Button, theme, Breadcrumb } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import '../assets/styles/global.css';
+import Logo from '../assets/images/logo';
 
 const { Header, Sider, Content } = Layout;
 
@@ -228,10 +229,11 @@ const MainLayout: React.FC = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider trigger={null} collapsible collapsed={collapsed} theme="light">
-        <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #f0f0f0' }}>
-          <h1 style={{ color: token.colorPrimary, fontSize: collapsed ? '16px' : '20px', margin: 0 }}>
-            {collapsed ? '拓天' : '拓天科技'}
-          </h1>
+        <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #f0f0f0', padding: '0 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', width: '100%' }}>
+            <Image width={200} src="/logo2.png" />
+            {!collapsed && <h1 style={{ color: token.colorPrimary, fontSize: '18px', margin: '0 0 0 12px' }}>营销平台</h1>}
+          </div>
         </div>
         <Menu
           theme="light"

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Tabs, Form, Input, Switch, Button, message, Space, Select, InputNumber, Upload, Divider, Row, Col } from 'antd';
+import { Card, Tabs, Form, Input, Switch, Button, message, Space, Select, InputNumber, Upload, Divider, Row, Col, Image } from 'antd';
 import { SaveOutlined, UploadOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import type { RcFile } from 'antd/es/upload';
 import axios from 'axios';
+import Logo from '../assets/images/logo';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -98,6 +99,19 @@ const Settings: React.FC = () => {
               status: 'done',
               url: data.basic.logo
             }]);
+          } else {
+            // 设置默认logo
+            const logoSvgUrl = '/logo.svg';
+            setLogoFile([{
+              uid: '-1',
+              name: 'logo.svg',
+              status: 'done',
+              url: logoSvgUrl
+            }]);
+            basicForm.setFieldsValue({
+              ...data.basic,
+              logo: logoSvgUrl
+            });
           }
 
           if (data.basic.favicon) {
@@ -107,6 +121,19 @@ const Settings: React.FC = () => {
               status: 'done',
               url: data.basic.favicon
             }]);
+          } else {
+            // 设置默认favicon
+            const faviconUrl = '/logo.svg';
+            setFaviconFile([{
+              uid: '-1',
+              name: 'favicon.svg',
+              status: 'done',
+              url: faviconUrl
+            }]);
+            basicForm.setFieldsValue({
+              ...data.basic,
+              favicon: faviconUrl
+            });
           }
         }
       } catch (error) {
@@ -344,6 +371,9 @@ const Settings: React.FC = () => {
                   name="logo"
                   label="网站Logo"
                 >
+                  <div style={{ marginBottom: 16 }}>
+                    <Logo width={100} height={100} />
+                  </div>
                   <Upload
                     name="file"
                     listType="picture"

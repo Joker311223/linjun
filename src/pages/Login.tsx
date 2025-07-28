@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, message, Typography } from 'antd';
+import { Form, Input, Button, Card, Image, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -46,8 +46,9 @@ const Login: React.FC = () => {
     }}>
       <Card style={{ width: 400, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <Title level={2} style={{ color: '#1890ff' }}>拓天科技</Title>
-          <Title level={4} style={{ marginTop: 0 }}>营销管理平台</Title>
+          <Image width={200} src="/logo2.png" />
+          {/* <Title level={2} style={{ color: '#1890ff' }}>拓天科技</Title> */}
+          <Title level={4} style={{ marginTop: 8 }}>营销管理平台</Title>
         </div>
         <Form
           name="login"
@@ -87,7 +88,7 @@ const Login: React.FC = () => {
           </Form.Item>
 
           <div style={{ textAlign: 'center' }}>
-            <p>用户名: admin / 密码: admin123</p>
+            {/* <p>用户名: admin / 密码: admin123</p> */}
           </div>
         </Form>
       </Card>

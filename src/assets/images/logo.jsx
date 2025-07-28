@@ -1,0 +1,23 @@
+import React from 'react';
+
+const Logo = ({ width = 64, height = 64 }) => {
+  return (
+    <svg width={width} height={height} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(50, 50) scale(0.8)">
+        {/* 左上方拼图块 */}
+        <path d="M100 50 L200 50 L200 150 L150 150 L150 200 L50 200 L50 100 L100 100 Z" fill="#2952a3" stroke="#000" strokeWidth="8"/>
+
+        {/* 右上方拼图块 */}
+        <path d="M250 50 L350 50 L350 100 L400 100 L400 200 L300 200 L300 150 L250 150 Z" fill="#2952a3" stroke="#000" strokeWidth="8"/>
+
+        {/* 左下方拼图块 */}
+        <path d="M50 250 L150 250 L150 300 L200 300 L200 400 L100 400 L100 350 L50 350 Z" fill="#2952a3" stroke="#000" strokeWidth="8"/>
+
+        {/* 右下方拼图块 */}
+        <path d="M250 250 L350 250 L350 350 L400 350 L400 400 L300 400 L300 350 L250 350 Z" fill="#2952a3" stroke="#000" strokeWidth="8"/>
+      </g>
+    </svg>
+  );
+};
+
+export default Logo;
