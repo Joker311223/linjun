@@ -19,6 +19,16 @@ const paymentMethods = [
   { id: 4, name: '余额支付' }
 ];
 
+// 订单来源
+const orderSources = [
+  { id: 1, name: '抖音' },
+  { id: 2, name: '微信' },
+  { id: 3, name: '淘宝' },
+  { id: 4, name: '小红书' },
+  { id: 5, name: '官网' },
+  { id: 6, name: '其他' }
+];
+
 // 订单列表
 Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
   const orders = [];
@@ -29,6 +39,8 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
     const status = orderStatus[statusIndex];
     const paymentMethodIndex = Random.integer(0, paymentMethods.length - 1);
     const paymentMethod = paymentMethods[paymentMethodIndex];
+    const sourceIndex = Random.integer(0, orderSources.length - 1);
+    const source = orderSources[sourceIndex];
     const packageType = Random.pick(packageTypes);
     const price = Random.float(10, 500, 2, 2);
     const quantity = Random.integer(1, 5);
@@ -70,6 +82,8 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
       discount: Random.float(0, price * 0.3, 2, 2),
       paymentMethodId: paymentMethod.id,
       paymentMethod: paymentMethod.name,
+      source: source.name,
+      sourceId: source.id,
       status: status.id,
       statusName: status.name,
       statusColor: status.color,
@@ -87,6 +101,7 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
   const keyword = url.searchParams.get('keyword') || '';
   const status = url.searchParams.get('status') || '';
   const dateRange = url.searchParams.get('dateRange') || '';
+  const source = url.searchParams.get('source') || '';
 
   // 过滤数据
   let filteredOrders = orders;
@@ -100,6 +115,10 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
 
   if (status) {
     filteredOrders = filteredOrders.filter(order => order.status.toString() === status);
+  }
+
+  if (source) {
+    filteredOrders = filteredOrders.filter(order => order.source === source);
   }
 
   if (dateRange) {
@@ -147,6 +166,15 @@ Mock.mock('/api/orders/payment-methods', 'get', () => {
   };
 });
 
+// 获取订单来源
+Mock.mock('/api/orders/sources', 'get', () => {
+  return {
+    code: 200,
+    message: '获取成功',
+    data: orderSources
+  };
+});
+
 // 获取订单详情
 Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
   const url = options.url;
@@ -156,6 +184,8 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
   const status = orderStatus[statusIndex];
   const paymentMethodIndex = Random.integer(0, paymentMethods.length - 1);
   const paymentMethod = paymentMethods[paymentMethodIndex];
+  const sourceIndex = Random.integer(0, orderSources.length - 1);
+  const source = orderSources[sourceIndex];
   const packageType = Random.pick(['流量套餐', '通话套餐', '短信套餐', '增值服务', '组合套餐']);
   const price = Random.float(10, 500, 2, 2);
   const quantity = Random.integer(1, 5);
@@ -190,7 +220,7 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
     action: '创建订单',
     operator: '系统',
     operateTime: Random.datetime('yyyy-MM-dd HH:mm:ss'),
-    details: '用户创建订单'
+    details: `用户通过${source.name}创建订单`
   });
 
   if (status.id !== 0) {
@@ -253,6 +283,8 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
       discount: Random.float(0, price * 0.3, 2, 2),
       paymentMethodId: paymentMethod.id,
       paymentMethodName: paymentMethod.name,
+      source: source.name,
+      sourceId: source.id,
       status: status.id,
       statusName: status.name,
       statusColor: status.color,
@@ -330,6 +362,12 @@ Mock.mock(/\/api\/orders\/statistics(\?.*)?$/, 'get', (options: any) => {
     ]
   };
 
+  // 生成订单来源分布数据
+  const sourceData = {
+    sources: orderSources.map(source => source.name),
+    values: orderSources.map(() => Random.integer(50, 300))
+  };
+
   return {
     code: 200,
     message: '获取成功',
@@ -352,6 +390,7 @@ Mock.mock(/\/api\/orders\/statistics(\?.*)?$/, 'get', (options: any) => {
       },
       packageData,
       payMethodData,
+      sourceData,
       regionData: {
         regions: ['华东', '华南', '华北', '华中', '西南', '西北', '东北'],
         values: [

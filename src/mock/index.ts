@@ -4,6 +4,7 @@ import './packages';
 import './campaigns';
 import './statistics';
 import './orders';
+import './sources';
 
 // 设置延迟时间
 Mock.setup({

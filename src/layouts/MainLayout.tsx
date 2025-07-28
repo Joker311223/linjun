@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu,Image, Avatar, Dropdown, Button, theme, Breadcrumb } from 'antd';
+import { Layout, Menu, Image, Avatar, Dropdown, Button, theme, Breadcrumb } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -9,7 +9,9 @@ import {
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
-  BellOutlined
+  BellOutlined,
+  ShopOutlined,
+  TagOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import '../assets/styles/global.css';
@@ -84,6 +86,39 @@ const MainLayout: React.FC = () => {
           key: 'orders-statistics',
           label: '订单统计',
           path: '/orders/statistics'
+        }
+      ]
+    },
+    {
+      key: 'sources',
+      icon: <ShopOutlined />,
+      label: '订单来源',
+      path: '/sources',
+      children: [
+        {
+          key: 'sources-douyin',
+          label: '抖音',
+          path: '/sources/douyin'
+        },
+        {
+          key: 'sources-wechat',
+          label: '微信',
+          path: '/sources/wechat'
+        },
+        {
+          key: 'sources-taobao',
+          label: '淘宝',
+          path: '/sources/taobao'
+        },
+        {
+          key: 'sources-xiaohongshu',
+          label: '小红书',
+          path: '/sources/xiaohongshu'
+        },
+        {
+          key: 'sources-other',
+          label: '其他渠道',
+          path: '/sources/other'
         }
       ]
     },

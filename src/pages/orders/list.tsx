@@ -23,6 +23,7 @@ interface Order {
   createTime: string;
   payTime: string;
   expireTime: string;
+  source: string; // 添加订单来源字段
 }
 
 const OrderList: React.FC = () => {
@@ -35,6 +36,7 @@ const OrderList: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([null, null]);
   const [payMethod, setPayMethod] = useState<string>('');
+  const [source, setSource] = useState<string>(''); // 添加订单来源状态
 
   const navigate = useNavigate();
 
@@ -58,6 +60,10 @@ const OrderList: React.FC = () => {
           params.payMethod = payMethod;
         }
 
+        if (source) {
+          params.source = source;
+        }
+
         if (dateRange[0] && dateRange[1]) {
           params.startDate = dateRange[0].format('YYYY-MM-DD');
           params.endDate = dateRange[1].format('YYYY-MM-DD');
@@ -77,7 +83,7 @@ const OrderList: React.FC = () => {
     };
 
     fetchOrders();
-  }, [pageNum, pageSize, keyword, selectedStatus, dateRange, payMethod]);
+  }, [pageNum, pageSize, keyword, selectedStatus, dateRange, payMethod, source]);
 
   // 处理搜索
   const handleSearch = (value: string) => {
@@ -94,6 +100,12 @@ const OrderList: React.FC = () => {
   // 处理支付方式筛选
   const handlePayMethodChange = (value: string) => {
     setPayMethod(value);
+    setPageNum(1);
+  };
+
+  // 处理订单来源筛选
+  const handleSourceChange = (value: string) => {
+    setSource(value);
     setPageNum(1);
   };
 
@@ -135,6 +147,22 @@ const OrderList: React.FC = () => {
         return <Tag color="warning">已过期</Tag>;
       default:
         return <Tag color="default">未知</Tag>;
+    }
+  };
+
+  // 获取订单来源标签
+  const getSourceTag = (source: string) => {
+    switch (source) {
+      case '抖音':
+        return <Tag color="volcano">{source}</Tag>;
+      case '微信':
+        return <Tag color="green">{source}</Tag>;
+      case '淘宝':
+        return <Tag color="orange">{source}</Tag>;
+      case '小红书':
+        return <Tag color="red">{source}</Tag>;
+      default:
+        return <Tag color="default">{source || '未知'}</Tag>;
     }
   };
 
@@ -183,6 +211,13 @@ const OrderList: React.FC = () => {
       dataIndex: 'payMethod',
       key: 'payMethod',
       width: 100
+    },
+    {
+      title: '订单来源',
+      dataIndex: 'source',
+      key: 'source',
+      width: 100,
+      render: (source: string) => getSourceTag(source)
     },
     {
       title: '订单状态',
@@ -252,6 +287,18 @@ const OrderList: React.FC = () => {
             <Option value="wechat">微信</Option>
             <Option value="creditCard">信用卡</Option>
             <Option value="bankTransfer">银行转账</Option>
+          </Select>
+          <Select
+            placeholder="订单来源"
+            allowClear
+            style={{ width: 120 }}
+            onChange={handleSourceChange}
+          >
+            <Option value="抖音">抖音</Option>
+            <Option value="微信">微信</Option>
+            <Option value="淘宝">淘宝</Option>
+            <Option value="小红书">小红书</Option>
+            <Option value="其他">其他</Option>
           </Select>
           <RangePicker
             placeholder={['开始日期', '结束日期']}

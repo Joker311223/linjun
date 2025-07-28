@@ -2,6 +2,16 @@ import Mock from 'mockjs';
 
 const Random = Mock.Random;
 
+// 订单来源
+const orderSources = [
+  { id: 1, name: '抖音' },
+  { id: 2, name: '微信' },
+  { id: 3, name: '淘宝' },
+  { id: 4, name: '小红书' },
+  { id: 5, name: '官网' },
+  { id: 6, name: '其他' }
+];
+
 // 获取首页统计数据
 Mock.mock('/api/statistics/dashboard', 'get', () => {
   // 生成最近7天的日期
@@ -56,6 +66,12 @@ Mock.mock('/api/statistics/dashboard', 'get', () => {
   // 按销售量排序
   hotPackages.sort((a, b) => b.sales - a.sales);
 
+  // 订单来源数据
+  const sourceData = {
+    sources: orderSources.map(source => source.name),
+    values: orderSources.map(() => Random.integer(50, 300))
+  };
+
   return {
     code: 200,
     message: '获取成功',
@@ -74,6 +90,7 @@ Mock.mock('/api/statistics/dashboard', 'get', () => {
       },
       packageTypes,
       hotPackages,
+      sourceData,
       recentOrders: generateRecentOrders(5)
     }
   };
@@ -196,6 +213,12 @@ Mock.mock(/\/api\/statistics\/sales(\?.*)?$/, 'get', (options: any) => {
     channels[0].value += (100 - channelSum);
   }
 
+  // 订单来源数据
+  const sourceData = {
+    sources: orderSources.map(source => source.name),
+    values: orderSources.map(() => Random.integer(50, 300))
+  };
+
   return {
     code: 200,
     message: '获取成功',
@@ -213,7 +236,8 @@ Mock.mock(/\/api\/statistics\/sales(\?.*)?$/, 'get', (options: any) => {
       },
       packageTypes,
       hotPackages,
-      channels
+      channels,
+      sourceData
     }
   };
 });
@@ -377,6 +401,7 @@ function generateRecentOrders(count: number) {
       packageType: Random.pick(packageTypes),
       amount: Random.float(10, 500, 2, 2),
       paymentMethod: Random.pick(paymentMethods),
+      source: Random.pick(orderSources.map(source => source.name)),
       status: Random.pick(orderStatus),
       createTime: Random.datetime('yyyy-MM-dd HH:mm:ss')
     });

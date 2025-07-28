@@ -11,6 +11,11 @@ import OrderList from './pages/orders/list';
 import OrderStatistics from './pages/orders/statistics';
 import UserList from './pages/users/list';
 import UserStatistics from './pages/users/statistics';
+import DouyinSource from './pages/sources/douyin';
+import WechatSource from './pages/sources/wechat';
+import TaobaoSource from './pages/sources/taobao';
+import XiaohongshuSource from './pages/sources/xiaohongshu';
+import OtherSource from './pages/sources/other';
 import Settings from './pages/settings';
 import './mock';
 
@@ -61,6 +66,15 @@ const App: React.FC = () => {
             <Route path="list" element={<OrderList />} />
             <Route path="detail/:id" element={<div>订单详情页面</div>} />
             <Route path="statistics" element={<OrderStatistics />} />
+          </Route>
+
+          {/* 订单来源路由 */}
+          <Route path="sources">
+            <Route path="douyin" element={<DouyinSource />} />
+            <Route path="wechat" element={<WechatSource />} />
+            <Route path="taobao" element={<TaobaoSource />} />
+            <Route path="xiaohongshu" element={<XiaohongshuSource />} />
+            <Route path="other" element={<OtherSource />} />
           </Route>
 
           {/* 用户管理路由 */}
