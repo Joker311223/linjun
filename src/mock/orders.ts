@@ -2,8 +2,59 @@ import Mock from 'mockjs';
 
 const Random = Mock.Random;
 
+// 定义接口
+interface OrderStatus {
+  id: number;
+  name: string;
+  color: string;
+}
+
+interface PaymentMethod {
+  id: number;
+  name: string;
+}
+
+interface OrderSource {
+  id: number;
+  name: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  type: string;
+  price: number;
+  description: string;
+}
+
+interface Order {
+  id: string;
+  orderNo: string;
+  userId: number;
+  userName: string;
+  packageId: number;
+  packageName: string;
+  packageType: string;
+  price: number;
+  quantity: number;
+  amount: number;
+  payAmount: number;
+  discount: number;
+  paymentMethodId: number;
+  paymentMethod: string;
+  source: string;
+  sourceId: number;
+  status: number;
+  statusName: string;
+  statusColor: string;
+  createTime: string;
+  payTime: string | null;
+  completeTime: string | null;
+  remark: string | null;
+}
+
 // 订单状态
-const orderStatus = [
+const orderStatus: OrderStatus[] = [
   { id: 0, name: '待支付', color: 'warning' },
   { id: 1, name: '已支付', color: 'success' },
   { id: 2, name: '已取消', color: 'default' },
@@ -12,7 +63,7 @@ const orderStatus = [
 ];
 
 // 支付方式
-const paymentMethods = [
+const paymentMethods: PaymentMethod[] = [
   { id: 1, name: '微信支付' },
   { id: 2, name: '支付宝' },
   { id: 3, name: '银行卡' },
@@ -20,7 +71,7 @@ const paymentMethods = [
 ];
 
 // 订单来源
-const orderSources = [
+const orderSources: OrderSource[] = [
   { id: 1, name: '抖音' },
   { id: 2, name: '微信' },
   { id: 3, name: '淘宝' },
@@ -29,10 +80,33 @@ const orderSources = [
   { id: 6, name: '其他' }
 ];
 
+// 产品数据（与packages.ts中保持一致）
+const products: Product[] = [
+  { id: 1, name: '小米蓝牙耳机 Air2 青春版', type: '小米蓝牙耳机', price: 199, description: '入耳式设计，支持蓝牙5.0，适合日常音乐播放和通话，性价比高。' },
+  { id: 2, name: '小米手环 4', type: '小米手环', price: 299, description: '彩色大屏，支持心率监测，运动追踪，睡眠监测，续航20天，适合运动。' },
+  { id: 3, name: '小米移动电源 3', type: '小米移动电源', price: 79, description: '通用分体式，多容量可选，支持快充，方便外出手机紧急充电。' },
+  { id: 4, name: 'AUN 迷你投影仪', type: 'AUN 迷你投影仪', price: 300, description: '体积小巧，支持无线投影，适用于家庭娱乐，投影效果清晰。' },
+  { id: 5, name: '小米路由器 4A', type: '小米路由器', price: 79, description: '双频（2.4GHz/5GHz），4根天线，信号稳定，覆盖范围广，满足家庭网络需求。' },
+  { id: 6, name: 'Redmi AirDots', type: 'Redmi AirDots', price: 99.9, description: '真无线设计，蓝牙 5.0，支持双边通话和语音助手手势操作，充电盒续航长。' },
+  { id: 7, name: '小爱音箱 Play', type: '小爱音箱', price: 89, description: '支持语音控制音乐播放，智能设备，性价比高，适合智能家居用户。' },
+  { id: 8, name: '米家智能床灯（磁吸版）', type: '米家智能床灯', price: 49, description: '人体感应触发，可贴附在金属表面，光线柔和不刺眼，节能环保。' },
+  { id: 9, name: '米家智能台灯 1S', type: '米家智能台灯', price: 169, description: '全光谱灯珠，亮度柔和，支持手机 APP 语音控制，适合阅读，分为多档亮度，保护家人用眼健康。' },
+  { id: 10, name: '小米无线充电器', type: '小米无线充电器', price: 215, description: '多时器温度保护，高效散热，兼容性好，适合多种手机无线充电。' },
+  { id: 11, name: '米家即热饮水机 S1', type: '米家即热饮水机', price: 258, description: '即热式出水，支持多档温度调节，小巧不占地，方便日常饮用热水。' },
+  { id: 12, name: '米家随手吸尘器', type: '米家随手吸尘器', price: 209, description: '手持轻便，适合清洁缝隙，沙发，车内等小细节处，操作简单收纳方便。' },
+  { id: 13, name: '倍思 65W 氮化镓充电头', type: '倍思充电头', price: 99, description: '体积小巧，兼容多种协议，可快速为手机、平板充电。' },
+  { id: 14, name: '红米手环 3 Pro', type: '红米手环', price: 129, description: '支持心率监测，运动计步，多种运动模式，外观时尚，适合日常健康管理。' },
+  { id: 15, name: '联想小新蓝牙耳机', type: '联想蓝牙耳机', price: 79, description: '半入耳式设计，佩戴舒适，稳定性好，适合搭配笔记本电脑使用，性价比高。' },
+  { id: 16, name: 'QCY T13 ANC 真无线耳机', type: 'QCY 耳机', price: 149, description: '具有主动降噪功能，减少外界干扰，音质好，续航时间长。' },
+  { id: 17, name: '小米挂脖风扇', type: '小米风扇', price: 89, description: '挂脖式设计，便携可随身携带，续航长，适合夏季户外使用。' },
+  { id: 18, name: '科普园家手机补光灯', type: '补光灯', price: 59, description: '可调节亮度和色温，提升手机拍摄画面光线，适合自拍。' },
+  { id: 19, name: '360 智能门锁（二手）', type: '智能门锁', price: 99, description: '支持手机 APP 查看开门记录，访客模式，视频监控，指纹解锁，保障居家安全。' },
+  { id: 20, name: '绿联手机散热背夹', type: '手机散热器', price: 79, description: '贴合手机背部，通过半导体制冷，避免热量积聚，适合长时间游戏。' }
+];
+
 // 订单列表
 Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
-  const orders = [];
-  const packageTypes = ['流量套餐', '通话套餐', '短信套餐', '增值服务', '组合套餐'];
+  const orders: Order[] = [];
 
   for (let i = 0; i < 100; i++) {
     const statusIndex = Random.integer(0, orderStatus.length - 1);
@@ -41,8 +115,11 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
     const paymentMethod = paymentMethods[paymentMethodIndex];
     const sourceIndex = Random.integer(0, orderSources.length - 1);
     const source = orderSources[sourceIndex];
-    const packageType = Random.pick(packageTypes);
-    const price = Random.float(10, 500, 2, 2);
+
+    // 随机选择一个产品
+    const productIndex = Random.integer(0, products.length - 1);
+    const product = products[productIndex];
+    const price = product.price;
     const quantity = Random.integer(1, 5);
     const amount = price * quantity;
 
@@ -72,9 +149,9 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
       orderNo: `ORD${Random.string('number', 12)}`,
       userId: Random.integer(1, 1000),
       userName: Random.cname(),
-      packageId: Random.integer(1, 50),
-      packageName: `拓天${packageType}${Random.integer(1, 100)}`,
-      packageType,
+      packageId: product.id,
+      packageName: product.name,
+      packageType: product.type,
       price,
       quantity,
       amount,
@@ -186,8 +263,11 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
   const paymentMethod = paymentMethods[paymentMethodIndex];
   const sourceIndex = Random.integer(0, orderSources.length - 1);
   const source = orderSources[sourceIndex];
-  const packageType = Random.pick(['流量套餐', '通话套餐', '短信套餐', '增值服务', '组合套餐']);
-  const price = Random.float(10, 500, 2, 2);
+
+  // 随机选择一个产品
+  const productIndex = Random.integer(0, products.length - 1);
+  const product = products[productIndex];
+  const price = product.price;
   const quantity = Random.integer(1, 5);
   const amount = price * quantity;
 
@@ -273,10 +353,10 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
       userId: Random.integer(1, 1000),
       userName: Random.cname(),
       userPhone: Random.string('number', 11),
-      packageId: Random.integer(1, 50),
-      packageName: `拓天${packageType}${Random.integer(1, 100)}`,
-      packageType,
-      packageDescription: `${packageType}描述信息`,
+      packageId: product.id,
+      packageName: product.name,
+      packageType: product.type,
+      packageDescription: product.description,
       price,
       quantity,
       amount,
@@ -341,7 +421,7 @@ Mock.mock(/\/api\/orders\/statistics(\?.*)?$/, 'get', (options: any) => {
 
   // 生成套餐销售分布数据
   const packageData = {
-    names: ['流量套餐', '通话套餐', '短信套餐', '增值服务', '组合套餐'],
+    names: ['耳机/音箱', '智能穿戴', '充电设备', '智能家居', '其他配件'],
     values: [
       Random.integer(100, 500),
       Random.integer(80, 400),
