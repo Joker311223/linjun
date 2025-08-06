@@ -3,17 +3,21 @@
 # dependencies
 /frontend/node_modules
 /servers/node_modules
+/node_modules
 /.pnp
 .pnp.js
 
 # testing
 /frontend/coverage
 /servers/coverage
+/coverage
 
 # production
 /frontend/build
 /servers/build
 /servers/dist
+/build
+/dist
 
 # misc
 .DS_Store
@@ -21,19 +25,55 @@
 .env.development.local
 .env.test.local
 .env.production.local
+*.log
 
 # logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 /servers/logs
+/logs
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+*.sublime-workspace
+*.sublime-project
 
 # environment variables
 .env
 /servers/.env
+.env.*
+
+# package managers
+yarn.lock
+package-lock.json
+npm-debug.log
+
+# compiled output
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# Gradle
+.gradle/
+build/
+
+# Temporary files
+tmp/
+temp/
