@@ -21,7 +21,46 @@ const orderSources = [
 ];
 
 // 套餐类型
-const packageTypes = ['流量套餐', '通话套餐', '短信套餐', '增值服务', '组合套餐'];
+const packageTypes = [
+  "小米蓝牙耳机 AirDots 青春版",
+  "小米手环 4",
+  "小米移动电源 3",
+  "AUN 迷你投影仪",
+  "小米路由器 4A",
+  "Redmi AirDots",
+  "小爱音箱 Play",
+  "米家智能小夜灯（磁吸版）",
+  "米家智能台灯 1S",
+  "小米天然气卫士",
+  "米家即热饮水机 S1",
+  "米家随手吸尘器",
+  "倍思 65W 氮化镓充电头",
+  "红米手环 3 Pro",
+  "联想小新蓝牙鼠标",
+  "QCY T13 ANC 真无线耳机",
+  "小米挂脖小风扇",
+  "抖音同款手机补光灯",
+  "360 智能门铃（二手）",
+  "绿联手机散热背夹",
+  "名创优品电子单词卡",
+  "罗技 MX Anywhere 3 鼠标",
+  "Keychron K3 蓝牙有线矮轴键盘",
+  "Windows Hello 指纹模块",
+  "麦金獭 35W 氮化镓充电器",
+  "inCharge 6 合 1 数据线",
+  "几硕充电宝",
+  "山水 S8 开放式耳机",
+  "黑鲨磁吸散热器青春版",
+  "品胜手机消毒盒",
+  "绿之源迷你款紫外线消毒灯",
+  "得力磁浮灯创意版",
+  "倍思 20 倍显微镜头",
+  "微麦 M100S 口袋投影",
+  "雷神 V10 超级电能棒充电宝",
+  "闪极随行 10000mAh 充电宝",
+  "惠普 4925 彩色无线喷墨打印机",
+  "爱立熊 P90 错题打印机",
+  "大疆手持稳定器"];
 
 // 生成订单来源数据
 const generateSourceData = (sourceId: string) => {
@@ -107,7 +146,7 @@ const generateSourceData = (sourceId: string) => {
     const productGrowth = Random.float(-30, 60, 1, 1);
     topProducts.push({
       id: Random.integer(1, 100),
-      name: `${Random.pick(packageTypes)}${Random.integer(1, 100)}`,
+      name: `${Random.pick(packageTypes)}`,
       sales: Random.float(1000, 10000, 2, 2),
       orders: Random.integer(10, 100),
       growth: productGrowth
@@ -127,12 +166,12 @@ const generateSourceData = (sourceId: string) => {
       id: `ORD${Random.string('number', 8)}`,
       orderNo: `ORD${Random.string('number', 12)}`,
       userName: Random.cname(),
-      packageName: `${Random.pick(packageTypes)}${Random.integer(1, 100)}`,
+      packageName: `${Random.pick(packageTypes)}`,
       amount: Random.float(10, 500, 2, 2),
       status: status.id,
       statusName: status.name,
       statusColor: status.color,
-      createTime: Random.datetime('yyyy-MM-dd HH:mm:ss')
+      createTime: '	2023-09-14 05:24:17'
     });
   }
 

@@ -113,10 +113,10 @@ const PackageCreate: React.FC = () => {
       >
         <Form.Item
           name="name"
-          label="套餐名称"
-          rules={[{ required: true, message: '请输入套餐名称' }]}
+          label="商品名称"
+          rules={[{ required: true, message: '请输入商品名称' }]}
         >
-          <Input placeholder="请输入套餐名称" maxLength={50} />
+          <Input placeholder="请输入商品名称" maxLength={50} />
         </Form.Item>
 
         <Form.Item

@@ -1,4 +1,5 @@
 import Mock from 'mockjs';
+import { generateFutureDateTime } from './utils';
 
 const Random = Mock.Random;
 
@@ -90,6 +91,10 @@ Mock.mock(/\/api\/packages\/list(\?.*)?$/, 'get', (options: any) => {
   allProducts.forEach(product => {
     const typeObj = packageTypes.find(t => t.id === product.type) || packageTypes[0];
 
+    // 计算折扣价格，确保比原价低10～20元
+    const discount = Random.integer(10, 20);
+    const discountPrice = product.price - discount;
+
     packages.push({
       id: product.id,
       name: product.name,
@@ -98,7 +103,7 @@ Mock.mock(/\/api\/packages\/list(\?.*)?$/, 'get', (options: any) => {
       typeName: typeObj.name,
       description: product.description,
       price: product.price,
-      discountPrice: product.price * Random.float(0.8, 0.95, 2, 2),
+      discountPrice,
       features: product.description.split('，'),
       duration: Random.pick([1, 3, 6, 12]),
       durationUnit: '月',
@@ -106,8 +111,8 @@ Mock.mock(/\/api\/packages\/list(\?.*)?$/, 'get', (options: any) => {
       isHot: Random.boolean(),
       isRecommended: Random.boolean(),
       salesCount: Random.integer(0, 10000),
-      createTime: Random.datetime('yyyy-MM-dd HH:mm:ss'),
-      updateTime: Random.datetime('yyyy-MM-dd HH:mm:ss')
+      createTime: generateFutureDateTime(), // 使用2025年7月20日之后的日期
+      updateTime: generateFutureDateTime(undefined, 30, 60) // 更新时间在创建时间之后
     });
   });
 
@@ -194,7 +199,11 @@ Mock.mock(/\/api\/packages\/detail\/\d+$/, 'get', (options: any) => {
   const product = allProducts.find(p => p.id === id) || allProducts[0];
   const type = packageTypes.find(t => t.id === product.type) || packageTypes[0];
   const price = product.price;
-  const discountPrice = price * Random.float(0.8, 0.95, 2, 2);
+
+  // 计算折扣价格，确保比原价低10～20元
+  const discount = Random.integer(10, 20);
+  const discountPrice = price - discount;
+
   const description = product.description;
   const features = product.description.split('，');
 
@@ -219,8 +228,8 @@ Mock.mock(/\/api\/packages\/detail\/\d+$/, 'get', (options: any) => {
       salesCount: Random.integer(0, 10000),
       content: Random.paragraph(5, 10),
       rules: Random.paragraph(3, 8),
-      createTime: Random.datetime('yyyy-MM-dd HH:mm:ss'),
-      updateTime: Random.datetime('yyyy-MM-dd HH:mm:ss')
+      createTime: generateFutureDateTime(), // 使用2025年7月20日之后的日期
+      updateTime: generateFutureDateTime(undefined, 30, 60) // 更新时间在创建时间之后
     }
   };
 });

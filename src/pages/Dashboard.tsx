@@ -92,7 +92,7 @@ const Dashboard: React.FC = () => {
       width: 120,
     },
     {
-      title: '套餐名称',
+      title: '商品名称',
       dataIndex: 'packageName',
       key: 'packageName',
       ellipsis: true,

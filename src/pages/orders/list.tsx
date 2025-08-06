@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Button, Input, Select, Tag, Space, DatePicker, Badge, Tooltip } from 'antd';
-import { EyeOutlined, DownloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { EyeOutlined, DownloadOutlined, SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -132,6 +132,11 @@ const OrderList: React.FC = () => {
     console.log('导出订单数据');
   };
 
+  // 处理新增订单
+  const handleAddOrder = () => {
+    navigate('/orders/create');
+  };
+
   // 获取订单状态标签
   const getStatusTag = (status: number) => {
     switch (status) {
@@ -188,7 +193,7 @@ const OrderList: React.FC = () => {
       width: 120
     },
     {
-      title: '套餐名称',
+      title: '商品名称',
       dataIndex: 'packageName',
       key: 'packageName',
       width: 150
@@ -257,58 +262,67 @@ const OrderList: React.FC = () => {
   return (
     <Card>
       <div style={{ marginBottom: 16 }}>
-        <Space size="large" wrap>
-          <Search
-            placeholder="搜索订单号/用户名/套餐名称"
-            allowClear
-            enterButton={<SearchOutlined />}
-            onSearch={handleSearch}
-            style={{ width: 250 }}
-          />
-          <Select
-            placeholder="订单状态"
-            allowClear
-            style={{ width: 120 }}
-            onChange={handleStatusChange}
-          >
-            <Option value="0">待支付</Option>
-            <Option value="1">已支付</Option>
-            <Option value="2">已完成</Option>
-            <Option value="3">已取消</Option>
-            <Option value="4">已过期</Option>
-          </Select>
-          <Select
-            placeholder="支付方式"
-            allowClear
-            style={{ width: 120 }}
-            onChange={handlePayMethodChange}
-          >
-            <Option value="alipay">支付宝</Option>
-            <Option value="wechat">微信</Option>
-            <Option value="creditCard">信用卡</Option>
-            <Option value="bankTransfer">银行转账</Option>
-          </Select>
-          <Select
-            placeholder="订单来源"
-            allowClear
-            style={{ width: 120 }}
-            onChange={handleSourceChange}
-          >
-            <Option value="抖音">抖音</Option>
-            <Option value="微信">微信</Option>
-            <Option value="淘宝">淘宝</Option>
-            <Option value="小红书">小红书</Option>
-            <Option value="其他">其他</Option>
-          </Select>
-          <RangePicker
-            placeholder={['开始日期', '结束日期']}
-            onChange={handleDateRangeChange}
-          />
+        <Space size="large" wrap style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Space size="large" wrap>
+            <Search
+              placeholder="搜索订单号/用户名/商品名称"
+              allowClear
+              enterButton={<SearchOutlined />}
+              onSearch={handleSearch}
+              style={{ width: 250 }}
+            />
+            <Select
+              placeholder="订单状态"
+              allowClear
+              style={{ width: 120 }}
+              onChange={handleStatusChange}
+            >
+              <Option value="0">待支付</Option>
+              <Option value="1">已支付</Option>
+              <Option value="2">已完成</Option>
+              <Option value="3">已取消</Option>
+              <Option value="4">已过期</Option>
+            </Select>
+            <Select
+              placeholder="支付方式"
+              allowClear
+              style={{ width: 120 }}
+              onChange={handlePayMethodChange}
+            >
+              <Option value="alipay">支付宝</Option>
+              <Option value="wechat">微信</Option>
+              <Option value="creditCard">信用卡</Option>
+              <Option value="bankTransfer">银行转账</Option>
+            </Select>
+            <Select
+              placeholder="订单来源"
+              allowClear
+              style={{ width: 120 }}
+              onChange={handleSourceChange}
+            >
+              <Option value="抖音">抖音</Option>
+              <Option value="微信">微信</Option>
+              <Option value="淘宝">淘宝</Option>
+              <Option value="小红书">小红书</Option>
+              <Option value="其他">其他</Option>
+            </Select>
+            <RangePicker
+              placeholder={['开始日期', '结束日期']}
+              onChange={handleDateRangeChange}
+            />
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={handleExport}
+            >
+              导出数据
+            </Button>
+          </Space>
           <Button
-            icon={<DownloadOutlined />}
-            onClick={handleExport}
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAddOrder}
           >
-            导出数据
+            新增订单
           </Button>
         </Space>
       </div>

@@ -1,4 +1,5 @@
 import Mock from 'mockjs';
+import { generateFutureDateTime, generateFutureDate, generateDateAfter, formatDate } from './utils';
 
 const Random = Mock.Random;
 
@@ -123,24 +124,28 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
     const quantity = Random.integer(1, 5);
     const amount = price * quantity;
 
-    // 生成订单时间
-    const now = new Date();
+    // 计算折扣和实付金额，确保实付价格比原价低10～20元
+    const discount = Random.integer(10, 20) * quantity;
+    const payAmount = amount - discount;
+
+    // 生成订单时间，确保在2025年7月20日之后
     let createTime, payTime, completeTime;
 
-    createTime = new Date(now.getTime() - Random.integer(1, 90) * 24 * 60 * 60 * 1000);
+    // 创建时间：2025年7月20日之后的随机日期
+    createTime = generateFutureDate(0, 90);
 
     if (status.id === 0) { // 待支付
       payTime = null;
       completeTime = null;
     } else if (status.id === 2) { // 已取消
       payTime = null;
-      completeTime = new Date(createTime.getTime() + Random.integer(1, 24) * 60 * 60 * 1000);
+      completeTime = generateDateAfter(createTime, 1, 24);
     } else { // 已支付、已退款、已完成
-      payTime = new Date(createTime.getTime() + Random.integer(1, 24) * 60 * 60 * 1000);
+      payTime = generateDateAfter(createTime, 1, 24);
       if (status.id === 1) { // 已支付
         completeTime = null;
       } else { // 已退款、已完成
-        completeTime = new Date(payTime.getTime() + Random.integer(1, 48) * 60 * 60 * 1000);
+        completeTime = generateDateAfter(payTime, 1, 48);
       }
     }
 
@@ -155,8 +160,8 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
       price,
       quantity,
       amount,
-      payAmount: Random.float(price * 0.7, price, 2, 2),
-      discount: Random.float(0, price * 0.3, 2, 2),
+      payAmount,
+      discount,
       paymentMethodId: paymentMethod.id,
       paymentMethod: paymentMethod.name,
       source: source.name,
@@ -164,9 +169,9 @@ Mock.mock(/\/api\/orders\/list(\?.*)?$/, 'get', (options: any) => {
       status: status.id,
       statusName: status.name,
       statusColor: status.color,
-      createTime: Random.datetime('yyyy-MM-dd HH:mm:ss'),
-      payTime: payTime ? Random.datetime('yyyy-MM-dd HH:mm:ss') : null,
-      completeTime: completeTime ? Random.datetime('yyyy-MM-dd HH:mm:ss') : null,
+      createTime: formatDate(createTime),
+      payTime: payTime ? formatDate(payTime) : null,
+      completeTime: completeTime ? formatDate(completeTime) : null,
       remark: Random.boolean() ? Random.paragraph(1) : null
     });
   }
@@ -271,24 +276,28 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
   const quantity = Random.integer(1, 5);
   const amount = price * quantity;
 
-  // 生成订单时间
-  const now = new Date();
+  // 计算折扣和实付金额，确保实付价格比原价低10～20元
+  const discount = Random.integer(10, 20) * quantity;
+  const payAmount = amount - discount;
+
+  // 生成订单时间，确保在2025年7月20日之后
   let createTime, payTime, completeTime;
 
-  createTime = new Date(now.getTime() - Random.integer(1, 90) * 24 * 60 * 60 * 1000);
+  // 创建时间：2025年7月20日之后的随机日期
+  createTime = generateFutureDate(0, 90);
 
   if (status.id === 0) { // 待支付
     payTime = null;
     completeTime = null;
   } else if (status.id === 2) { // 已取消
     payTime = null;
-    completeTime = new Date(createTime.getTime() + Random.integer(1, 24) * 60 * 60 * 1000);
+    completeTime = generateDateAfter(createTime, 1, 24);
   } else { // 已支付、已退款、已完成
-    payTime = new Date(createTime.getTime() + Random.integer(1, 24) * 60 * 60 * 1000);
+    payTime = generateDateAfter(createTime, 1, 24);
     if (status.id === 1) { // 已支付
       completeTime = null;
     } else { // 已退款、已完成
-      completeTime = new Date(payTime.getTime() + Random.integer(1, 48) * 60 * 60 * 1000);
+      completeTime = generateDateAfter(payTime, 1, 48);
     }
   }
 
@@ -299,7 +308,7 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
     orderId: id,
     action: '创建订单',
     operator: '系统',
-    operateTime: Random.datetime('yyyy-MM-dd HH:mm:ss'),
+    operateTime: formatDate(createTime),
     details: `用户通过${source.name}创建订单`
   });
 
@@ -310,7 +319,7 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
         orderId: id,
         action: '取消订单',
         operator: Random.boolean() ? '系统' : Random.cname(),
-        operateTime: Random.datetime('yyyy-MM-dd HH:mm:ss'),
+        operateTime: formatDate(completeTime as Date),
         details: Random.boolean() ? '用户取消订单' : '超时未支付，系统自动取消'
       });
     } else { // 已支付、已退款、已完成
@@ -319,7 +328,7 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
         orderId: id,
         action: '支付订单',
         operator: Random.cname(),
-        operateTime: Random.datetime('yyyy-MM-dd HH:mm:ss'),
+        operateTime: formatDate(payTime as Date),
         details: `用户通过${paymentMethod.name}支付订单`
       });
 
@@ -329,7 +338,7 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
           orderId: id,
           action: '退款订单',
           operator: Random.cname(),
-          operateTime: Random.datetime('yyyy-MM-dd HH:mm:ss'),
+          operateTime: formatDate(completeTime as Date),
           details: Random.boolean() ? '用户申请退款' : '系统自动退款'
         });
       } else if (status.id === 4) { // 已完成
@@ -338,7 +347,7 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
           orderId: id,
           action: '完成订单',
           operator: '系统',
-          operateTime: Random.datetime('yyyy-MM-dd HH:mm:ss'),
+          operateTime: formatDate(completeTime as Date),
           details: '订单服务已完成'
         });
       }
@@ -360,7 +369,8 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
       price,
       quantity,
       amount,
-      discount: Random.float(0, price * 0.3, 2, 2),
+      discount,
+      payAmount,
       paymentMethodId: paymentMethod.id,
       paymentMethodName: paymentMethod.name,
       source: source.name,
@@ -368,9 +378,9 @@ Mock.mock(/\/api\/orders\/detail\/\w+$/, 'get', (options: any) => {
       status: status.id,
       statusName: status.name,
       statusColor: status.color,
-      createTime: Random.datetime('yyyy-MM-dd HH:mm:ss'),
-      payTime: payTime ? Random.datetime('yyyy-MM-dd HH:mm:ss') : null,
-      completeTime: completeTime ? Random.datetime('yyyy-MM-dd HH:mm:ss') : null,
+      createTime: formatDate(createTime),
+      payTime: payTime ? formatDate(payTime) : null,
+      completeTime: completeTime ? formatDate(completeTime) : null,
       remark: Random.boolean() ? Random.paragraph(1) : null,
       logs
     }
@@ -484,5 +494,68 @@ Mock.mock(/\/api\/orders\/statistics(\?.*)?$/, 'get', (options: any) => {
         ]
       }
     }
+  };
+});
+
+// 创建订单
+Mock.mock('/api/orders/create', 'post', (options: any) => {
+  const body = JSON.parse(options.body);
+
+  // 获取用户信息
+  const userId = body.userId;
+  const user = { name: `用户${userId}`, phone: `1380013800${userId}` };
+
+  // 获取产品信息
+  const packageId = body.packageId;
+  const product = products.find(p => p.id === packageId) || products[0];
+
+  // 获取支付方式
+  const paymentMethodId = body.paymentMethodId;
+  const paymentMethod = paymentMethods.find(m => m.id === paymentMethodId) || paymentMethods[0];
+
+  // 获取订单来源
+  const sourceId = body.sourceId;
+  const source = orderSources.find(s => s.id === sourceId) || orderSources[0];
+
+  // 计算价格
+  const price = product.price;
+  const quantity = body.quantity || 1;
+  const amount = price * quantity;
+
+  // 计算折扣和实付金额，确保实付价格比原价低10～20元
+  const discount = body.discount || (Random.integer(10, 20) * quantity);
+  const payAmount = amount - discount;
+
+  // 构建订单数据
+  const order = {
+    id: `ORD${Random.string('number', 8)}`,
+    orderNo: body.orderNo || `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`,
+    userId,
+    userName: user.name,
+    packageId,
+    packageName: product.name,
+    packageType: product.type,
+    price,
+    quantity,
+    amount,
+    payAmount,
+    discount,
+    paymentMethodId,
+    paymentMethod: paymentMethod.name,
+    source: source.name,
+    sourceId,
+    status: 0, // 待支付
+    statusName: '待支付',
+    statusColor: 'warning',
+    createTime: generateFutureDateTime(), // 使用2025年7月20日之后的日期
+    payTime: null,
+    completeTime: null,
+    remark: body.remark || null
+  };
+
+  return {
+    code: 200,
+    message: '创建成功',
+    data: order
   };
 });

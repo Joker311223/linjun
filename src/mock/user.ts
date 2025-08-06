@@ -1,4 +1,5 @@
 import Mock from 'mockjs';
+import { generateFutureDateTime, generateFutureDate, generateDateAfter, formatDate } from './utils';
 
 const Random = Mock.Random;
 
@@ -44,7 +45,7 @@ Mock.mock('/api/user/info', 'get', () => {
       phone: Random.string('number', 11),
       department: '营销部',
       position: '部门经理',
-      createTime: Random.datetime('yyyy-MM-dd HH:mm:ss')
+      createTime: generateFutureDateTime() // 使用2025年7月20日之后的日期
     }
   };
 });
@@ -52,38 +53,23 @@ Mock.mock('/api/user/info', 'get', () => {
 // 获取用户列表
 Mock.mock(/\/api\/users\/list(\?.*)?$/, 'get', (options: any) => {
   const users = [];
-  const levels = [
-    { id: 1, name: '普通会员' },
-    { id: 2, name: '银卡会员' },
-    { id: 3, name: '金卡会员' },
-    { id: 4, name: '钻石会员' },
-    { id: 5, name: '至尊会员' }
-  ];
 
   for (let i = 0; i < 100; i++) {
-    const level = levels[Random.integer(0, levels.length - 1)];
-    const gender = Random.integer(0, 2); // 0: 未知, 1: 男, 2: 女
-    const status = Random.integer(0, 2); // 0: 未激活, 1: 正常, 2: 已禁用
-    const registerTime = Random.datetime('yyyy-MM-dd HH:mm:ss');
-    const lastLoginTime = Random.boolean() ? Random.datetime('yyyy-MM-dd HH:mm:ss') : null;
-    const totalSpent = Random.float(0, 10000, 2, 2);
-    const orderCount = Random.integer(0, 50);
-
+    const registerTime = generateFutureDateTime(); // 使用2025年7月20日之后的日期
+    const lastLoginTime = Random.boolean() ? generateFutureDateTime(undefined, 30, 60) : null; // 最后登录时间在注册时间之后
     users.push({
       id: i + 1,
-      username: `user${Random.string('lower', 5)}${i + 1}`,
-      nickname: Random.cname(),
-      avatar: Random.image('100x100', Random.color(), 'Avatar'),
+      username: `user${i + 1}`,
+      realName: Random.cname(),
       email: Random.email(),
       phone: Random.string('number', 11),
-      gender,
-      status,
-      level: level.id,
-      levelName: level.name,
+      status: Random.boolean() ? 1 : 0,
+      roles: Random.boolean() ? ['user'] : ['user', 'editor'],
       registerTime,
       lastLoginTime,
-      totalSpent,
-      orderCount
+      source: Random.pick(['官网', '微信', '抖音', '小红书', '淘宝', '其他']),
+      orderCount: Random.integer(0, 50),
+      totalSpent: Random.float(0, 10000, 2, 2)
     });
   }
 
@@ -93,7 +79,6 @@ Mock.mock(/\/api\/users\/list(\?.*)?$/, 'get', (options: any) => {
   const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
   const keyword = url.searchParams.get('keyword') || '';
   const status = url.searchParams.get('status') || '';
-  const level = url.searchParams.get('level') || '';
   const startDate = url.searchParams.get('startDate') || '';
   const endDate = url.searchParams.get('endDate') || '';
 
@@ -102,7 +87,7 @@ Mock.mock(/\/api\/users\/list(\?.*)?$/, 'get', (options: any) => {
   if (keyword) {
     filteredUsers = users.filter(user =>
       user.username.includes(keyword) ||
-      user.nickname.includes(keyword) ||
+      user.realName.includes(keyword) ||
       user.email.includes(keyword) ||
       user.phone.includes(keyword)
     );
@@ -110,10 +95,6 @@ Mock.mock(/\/api\/users\/list(\?.*)?$/, 'get', (options: any) => {
 
   if (status) {
     filteredUsers = filteredUsers.filter(user => user.status.toString() === status);
-  }
-
-  if (level) {
-    filteredUsers = filteredUsers.filter(user => user.level.toString() === level);
   }
 
   if (startDate && endDate) {
@@ -142,121 +123,111 @@ Mock.mock(/\/api\/users\/list(\?.*)?$/, 'get', (options: any) => {
 
 // 获取用户统计数据
 Mock.mock(/\/api\/users\/statistics(\?.*)?$/, 'get', (options: any) => {
-  // 解析查询参数
-  const url = new URL(options.url, 'http://localhost');
-  const startDate = url.searchParams.get('startDate') || '';
-  const endDate = url.searchParams.get('endDate') || '';
-  const timeUnit = url.searchParams.get('timeUnit') || 'day';
+  // 基础数据
+  const totalUsers = Random.integer(5000, 20000);
+  const activeUsers = Random.integer(Math.floor(totalUsers * 0.4), Math.floor(totalUsers * 0.6));
+  const newUsers = Random.integer(Math.floor(totalUsers * 0.05), Math.floor(totalUsers * 0.2));
+  const retentionRate = Random.float(60, 90, 1, 1);
 
-  // 生成日期数组
-  const dates = [];
-  const totalUsers = [];
-  const newUsers = [];
-  const activeUsers = [];
-  const retentionRates = [];
+  // 与上期比较的数据
+  const comparedToLastPeriod = {
+    totalUsers: Random.float(-10, 20, 1, 1),
+    newUsers: Random.float(-15, 30, 1, 1),
+    activeUsers: Random.float(-12, 25, 1, 1),
+    retentionRate: Random.float(-5, 10, 1, 1)
+  };
 
-  // 根据时间单位生成不同的日期范围
-  let daysCount = 30; // 默认30天
+  // 性别分布
+  const maleCount = Random.integer(Math.floor(totalUsers * 0.3), Math.floor(totalUsers * 0.6));
+  const femaleCount = Random.integer(Math.floor(totalUsers * 0.3), Math.floor(totalUsers * 0.6));
+  const unknownCount = totalUsers - maleCount - femaleCount;
 
-  if (timeUnit === 'week') {
-    daysCount = 12; // 12周
-  } else if (timeUnit === 'month') {
-    daysCount = 12; // 12个月
-  }
-
-  let baseTotal = Random.integer(5000, 10000);
-
-  for (let i = 0; i < daysCount; i++) {
-    const date = new Date();
-    if (timeUnit === 'day') {
-      date.setDate(date.getDate() - (daysCount - 1 - i));
-      dates.push(date.toISOString().split('T')[0]);
-    } else if (timeUnit === 'week') {
-      date.setDate(date.getDate() - (daysCount - 1 - i) * 7);
-      dates.push(`第${i + 1}周`);
-    } else if (timeUnit === 'month') {
-      date.setMonth(date.getMonth() - (daysCount - 1 - i));
-      dates.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
-    }
-
-    // 生成递增的总用户数
-    const newUserCount = Random.integer(50, 200);
-    baseTotal += newUserCount;
-    totalUsers.push(baseTotal);
-    newUsers.push(newUserCount);
-    activeUsers.push(Random.integer(baseTotal * 0.3, baseTotal * 0.7));
-    retentionRates.push(Random.float(60, 95, 1, 1));
-  }
-
-  // 生成性别分布数据
   const genderData = {
     labels: ['男', '女', '未知'],
-    values: [
-      Random.integer(3000, 6000),
-      Random.integer(2000, 5000),
-      Random.integer(100, 500)
-    ]
+    values: [maleCount, femaleCount, unknownCount]
   };
 
-  // 生成年龄分布数据
+  // 年龄分布
   const ageData = {
-    labels: ['18岁以下', '18-24岁', '25-34岁', '35-44岁', '45-54岁', '55岁以上'],
+    labels: ['18岁以下', '18-24岁', '25-34岁', '35-44岁', '45岁以上'],
     values: [
-      Random.integer(100, 500),
-      Random.integer(1000, 2000),
-      Random.integer(2000, 4000),
-      Random.integer(1500, 3000),
-      Random.integer(800, 1500),
-      Random.integer(300, 800)
+      Random.integer(Math.floor(totalUsers * 0.05), Math.floor(totalUsers * 0.15)),
+      Random.integer(Math.floor(totalUsers * 0.15), Math.floor(totalUsers * 0.25)),
+      Random.integer(Math.floor(totalUsers * 0.25), Math.floor(totalUsers * 0.35)),
+      Random.integer(Math.floor(totalUsers * 0.15), Math.floor(totalUsers * 0.25)),
+      Random.integer(Math.floor(totalUsers * 0.05), Math.floor(totalUsers * 0.15))
     ]
   };
 
-  // 生成等级分布数据
+  // 会员等级分布
   const levelData = {
     labels: ['普通会员', '银卡会员', '金卡会员', '钻石会员', '至尊会员'],
     values: [
-      Random.integer(3000, 5000),
-      Random.integer(1000, 2000),
-      Random.integer(500, 1000),
-      Random.integer(200, 500),
-      Random.integer(50, 200)
+      Random.integer(Math.floor(totalUsers * 0.5), Math.floor(totalUsers * 0.7)),
+      Random.integer(Math.floor(totalUsers * 0.15), Math.floor(totalUsers * 0.25)),
+      Random.integer(Math.floor(totalUsers * 0.05), Math.floor(totalUsers * 0.15)),
+      Random.integer(Math.floor(totalUsers * 0.02), Math.floor(totalUsers * 0.08)),
+      Random.integer(Math.floor(totalUsers * 0.01), Math.floor(totalUsers * 0.05))
     ]
   };
 
-  // 生成地区分布数据
+  // 地区分布
   const regionData = {
-    regions: ['华东', '华南', '华北', '华中', '西南', '西北', '东北'],
+    regions: ['华东', '华南', '华北', '华中', '西南', '西北', '东北', '其他'],
     values: [
-      Random.integer(1000, 2000),
-      Random.integer(800, 1500),
-      Random.integer(1200, 1800),
-      Random.integer(700, 1200),
-      Random.integer(500, 1000),
-      Random.integer(300, 800),
-      Random.integer(200, 600)
+      Random.integer(Math.floor(totalUsers * 0.2), Math.floor(totalUsers * 0.3)),
+      Random.integer(Math.floor(totalUsers * 0.15), Math.floor(totalUsers * 0.25)),
+      Random.integer(Math.floor(totalUsers * 0.15), Math.floor(totalUsers * 0.25)),
+      Random.integer(Math.floor(totalUsers * 0.1), Math.floor(totalUsers * 0.2)),
+      Random.integer(Math.floor(totalUsers * 0.05), Math.floor(totalUsers * 0.15)),
+      Random.integer(Math.floor(totalUsers * 0.05), Math.floor(totalUsers * 0.1)),
+      Random.integer(Math.floor(totalUsers * 0.05), Math.floor(totalUsers * 0.1)),
+      Random.integer(Math.floor(totalUsers * 0.01), Math.floor(totalUsers * 0.05))
     ]
   };
+
+  // 生成最近日期数据
+  const dates = [];
+  const newUsersData = [];
+  const activeUsersData = [];
+  const totalUsersData = [];
+  const retentionRatesData = [];
+
+  // 初始总用户数
+  let runningTotalUsers = totalUsers - Random.integer(500, 2000);
+
+  for (let i = 29; i >= 0; i--) {
+    // 生成2025年7月20日之后的日期
+    const futureDate = generateFutureDate(i, 0); // 从基准日期开始，每天递增
+    const dateStr = `${futureDate.getMonth() + 1}/${futureDate.getDate()}`;
+    dates.push(dateStr);
+
+    const dailyNewUsers = Random.integer(10, 100);
+    newUsersData.push(dailyNewUsers);
+
+    // 累加总用户数
+    runningTotalUsers += dailyNewUsers;
+    totalUsersData.push(runningTotalUsers);
+
+    activeUsersData.push(Random.integer(50, 500));
+    retentionRatesData.push(Random.float(60, 95, 1, 1));
+  }
 
   return {
     code: 200,
     message: '获取成功',
     data: {
-      totalUsers: baseTotal,
-      newUsers: newUsers.reduce((sum, val) => sum + val, 0),
-      activeUsers: Random.integer(baseTotal * 0.4, baseTotal * 0.6),
-      retentionRate: Random.float(70, 90, 1, 1),
-      comparedToLastPeriod: {
-        totalUsers: Random.float(5, 20, 1, 1),
-        newUsers: Random.float(-10, 30, 1, 1),
-        activeUsers: Random.float(-5, 25, 1, 1),
-        retentionRate: Random.float(-3, 10, 1, 1)
-      },
+      totalUsers,
+      newUsers,
+      activeUsers,
+      retentionRate,
+      comparedToLastPeriod,
       timeData: {
         dates,
-        totalUsers,
-        newUsers,
-        activeUsers,
-        retentionRates
+        totalUsers: totalUsersData,
+        newUsers: newUsersData,
+        activeUsers: activeUsersData,
+        retentionRates: retentionRatesData
       },
       genderData,
       ageData,

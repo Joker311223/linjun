@@ -141,7 +141,7 @@ const PackageList: React.FC = () => {
       width: 60
     },
     {
-      title: '套餐名称',
+      title: '商品名称',
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: Package) => (
@@ -242,7 +242,7 @@ const PackageList: React.FC = () => {
       <div style={{ marginBottom: 16 }}>
         <Space size="large">
           <Search
-            placeholder="搜索套餐名称或描述"
+            placeholder="搜索商品名称或描述"
             allowClear
             enterButton
             onSearch={handleSearch}

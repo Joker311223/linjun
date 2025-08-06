@@ -1,4 +1,5 @@
 import Mock from 'mockjs';
+import { generateFutureDate, formatDate } from './utils';
 
 const Random = Mock.Random;
 
@@ -75,16 +76,16 @@ const productTypes: ProductType[] = [
 
 // 获取首页统计数据
 Mock.mock('/api/statistics/dashboard', 'get', () => {
-  // 生成最近7天的日期
+  // 生成最近7天的日期，确保在2025年7月20日之后
   const days: string[] = [];
   const salesData: number[] = [];
   const ordersData: number[] = [];
   const usersData: number[] = [];
 
   for (let i = 6; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+    // 生成2025年7月20日之后的日期
+    const futureDate = generateFutureDate(i, 0); // 从基准日期开始，每天递减
+    const dateStr = `${futureDate.getMonth() + 1}/${futureDate.getDate()}`;
     days.push(dateStr);
 
     salesData.push(Random.float(10000, 50000, 2, 2));
@@ -144,14 +145,13 @@ Mock.mock(/\/api\/statistics\/sales(\?.*)?$/, 'get', (options: any) => {
   let salesData: number[] = [];
   let ordersData: number[] = [];
 
-  // 根据时间范围生成数据
+  // 根据时间范围生成数据，确保在2025年7月20日之后
   switch (timeRange) {
     case 'week':
       // 最近7天
       for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+        const futureDate = generateFutureDate(i, 0);
+        const dateStr = `${futureDate.getMonth() + 1}/${futureDate.getDate()}`;
         days.push(dateStr);
 
         salesData.push(Random.float(10000, 50000, 2, 2));
@@ -161,9 +161,8 @@ Mock.mock(/\/api\/statistics\/sales(\?.*)?$/, 'get', (options: any) => {
     case 'month':
       // 最近30天
       for (let i = 29; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+        const futureDate = generateFutureDate(i, 0);
+        const dateStr = `${futureDate.getMonth() + 1}/${futureDate.getDate()}`;
         days.push(dateStr);
 
         salesData.push(Random.float(10000, 50000, 2, 2));
@@ -183,9 +182,8 @@ Mock.mock(/\/api\/statistics\/sales(\?.*)?$/, 'get', (options: any) => {
     case 'year':
       // 最近12个月
       for (let i = 11; i >= 0; i--) {
-        const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        const dateStr = `${date.getFullYear()}/${date.getMonth() + 1}`;
+        const futureDate = generateFutureDate(i * 30, 0); // 每月间隔约30天
+        const dateStr = `${futureDate.getFullYear()}/${futureDate.getMonth() + 1}`;
         days.push(dateStr);
 
         salesData.push(Random.float(200000, 800000, 2, 2));
@@ -425,7 +423,7 @@ function generateRecentOrders(count: number): RecentOrder[] {
       paymentMethod: Random.pick(paymentMethods),
       source: Random.pick(orderSources.map(source => source.name)),
       status: Random.pick(orderStatus),
-      createTime: Random.datetime('yyyy-MM-dd HH:mm:ss')
+      createTime: '	2023-09-14 05:24:17'
     });
   }
 

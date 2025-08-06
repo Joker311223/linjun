@@ -12,18 +12,16 @@ const { RangePicker } = DatePicker;
 interface User {
   id: number;
   username: string;
-  nickname: string;
-  avatar: string;
+  realName: string;
   email: string;
   phone: string;
-  gender: number;
   status: number;
-  level: number;
-  levelName: string;
+  roles: string[];
   registerTime: string;
-  lastLoginTime: string;
-  totalSpent: number;
+  lastLoginTime: string | null;
+  source: string;
   orderCount: number;
+  totalSpent: number;
 }
 
 const UserList: React.FC = () => {
@@ -34,7 +32,6 @@ const UserList: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [keyword, setKeyword] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [selectedLevel, setSelectedLevel] = useState<string>('');
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([null, null]);
 
   const navigate = useNavigate();
@@ -53,10 +50,6 @@ const UserList: React.FC = () => {
 
         if (selectedStatus) {
           params.status = selectedStatus;
-        }
-
-        if (selectedLevel) {
-          params.level = selectedLevel;
         }
 
         if (dateRange[0] && dateRange[1]) {
@@ -78,7 +71,7 @@ const UserList: React.FC = () => {
     };
 
     fetchUsers();
-  }, [pageNum, pageSize, keyword, selectedStatus, selectedLevel, dateRange]);
+  }, [pageNum, pageSize, keyword, selectedStatus, dateRange]);
 
   // 处理搜索
   const handleSearch = (value: string) => {
@@ -89,12 +82,6 @@ const UserList: React.FC = () => {
   // 处理状态筛选
   const handleStatusChange = (value: string) => {
     setSelectedStatus(value);
-    setPageNum(1);
-  };
-
-  // 处理等级筛选
-  const handleLevelChange = (value: string) => {
-    setSelectedLevel(value);
     setPageNum(1);
   };
 
@@ -128,18 +115,23 @@ const UserList: React.FC = () => {
         return <Tag color="success">正常</Tag>;
       case 0:
         return <Tag color="default">未激活</Tag>;
-      case 2:
-        return <Tag color="error">已禁用</Tag>;
       default:
         return <Tag color="default">未知</Tag>;
     }
   };
 
-  // 获取用户等级标签
-  const getLevelTag = (level: number, levelName: string) => {
-    const colors = ['default', 'blue', 'cyan', 'green', 'gold', 'orange', 'volcano'];
-    const color = colors[level % colors.length];
-    return <Tag color={color}>{levelName}</Tag>;
+  // 获取用户角色标签
+  const getRoleTags = (roles: string[]) => {
+    return (
+      <Space>
+        {roles.map(role => {
+          let color = 'default';
+          if (role === 'admin') color = 'red';
+          else if (role === 'editor') color = 'blue';
+          return <Tag key={role} color={color}>{role}</Tag>;
+        })}
+      </Space>
+    );
   };
 
   // 表格列定义
@@ -157,12 +149,11 @@ const UserList: React.FC = () => {
       render: (record: User) => (
         <Space>
           <Avatar
-            src={record.avatar}
             icon={<UserOutlined />}
             size="large"
           />
           <div>
-            <div style={{ fontWeight: 'bold' }}>{record.nickname}</div>
+            <div style={{ fontWeight: 'bold' }}>{record.realName}</div>
             <div style={{ fontSize: 12, color: '#999' }}>{record.username}</div>
           </div>
         </Space>
@@ -180,13 +171,10 @@ const UserList: React.FC = () => {
       )
     },
     {
-      title: '性别',
-      dataIndex: 'gender',
-      key: 'gender',
-      width: 80,
-      render: (gender: number) => (
-        gender === 1 ? '男' : gender === 2 ? '女' : '未知'
-      )
+      title: '来源',
+      dataIndex: 'source',
+      key: 'source',
+      width: 100
     },
     {
       title: '状态',
@@ -196,10 +184,10 @@ const UserList: React.FC = () => {
       render: (status: number) => getStatusTag(status)
     },
     {
-      title: '等级',
-      key: 'level',
-      width: 100,
-      render: (record: User) => getLevelTag(record.level, record.levelName)
+      title: '角色',
+      key: 'roles',
+      width: 120,
+      render: (record: User) => getRoleTags(record.roles)
     },
     {
       title: '消费情况',
@@ -245,7 +233,7 @@ const UserList: React.FC = () => {
       <div style={{ marginBottom: 16 }}>
         <Space size="large" wrap>
           <Search
-            placeholder="搜索用户名/昵称/邮箱/手机"
+            placeholder="搜索用户名/姓名/邮箱/手机"
             allowClear
             enterButton={<SearchOutlined />}
             onSearch={handleSearch}
@@ -259,19 +247,6 @@ const UserList: React.FC = () => {
           >
             <Option value="1">正常</Option>
             <Option value="0">未激活</Option>
-            <Option value="2">已禁用</Option>
-          </Select>
-          <Select
-            placeholder="用户等级"
-            allowClear
-            style={{ width: 120 }}
-            onChange={handleLevelChange}
-          >
-            <Option value="1">普通会员</Option>
-            <Option value="2">银卡会员</Option>
-            <Option value="3">金卡会员</Option>
-            <Option value="4">钻石会员</Option>
-            <Option value="5">至尊会员</Option>
           </Select>
           <RangePicker
             placeholder={['注册开始日期', '注册结束日期']}

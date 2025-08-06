@@ -110,7 +110,7 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
       width: 120
     },
     {
-      title: '套餐名称',
+      title: '商品名称',
       dataIndex: 'packageName',
       key: 'packageName',
       width: 150

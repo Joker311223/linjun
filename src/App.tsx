@@ -8,6 +8,7 @@ import PackageCreate from './pages/packages/create';
 import CampaignList from './pages/campaigns/list';
 import CampaignCreate from './pages/campaigns/create';
 import OrderList from './pages/orders/list';
+import OrderCreate from './pages/orders/create';
 import OrderStatistics from './pages/orders/statistics';
 import UserList from './pages/users/list';
 import UserStatistics from './pages/users/statistics';
@@ -64,6 +65,7 @@ const App: React.FC = () => {
           {/* 订单管理路由 */}
           <Route path="orders">
             <Route path="list" element={<OrderList />} />
+            <Route path="create" element={<OrderCreate />} />
             <Route path="detail/:id" element={<div>订单详情页面</div>} />
             <Route path="statistics" element={<OrderStatistics />} />
           </Route>
