@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Table, Card, Button, Input, Select, Tag, Space, DatePicker, Badge, Avatar, Tooltip } from 'antd';
 import { EyeOutlined, SearchOutlined, UserOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import dayjs from 'dayjs';
+import { getUserList } from '../../services/userService';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -57,11 +57,11 @@ const UserList: React.FC = () => {
           params.endDate = dateRange[1].format('YYYY-MM-DD');
         }
 
-        const response = await axios.get('/api/users/list', { params });
+        const response = await getUserList(params);
 
-        if (response.data.code === 200) {
-          setUsers(response.data.data.list);
-          setTotal(response.data.data.total);
+        if (response.code === 200) {
+          setUsers(response.data.list);
+          setTotal(response.data.total);
         }
       } catch (error) {
         console.error('获取用户列表失败:', error);

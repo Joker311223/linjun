@@ -18,7 +18,6 @@ import TaobaoSource from './pages/sources/taobao';
 import XiaohongshuSource from './pages/sources/xiaohongshu';
 import OtherSource from './pages/sources/other';
 import Settings from './pages/settings';
-import './mock';
 
 // 路由守卫组件
 const PrivateRoute: React.FC<{ element: React.ReactNode }> = ({ element }) => {

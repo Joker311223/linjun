@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yin.yin.mapper.CampaignMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.yin.yin.model.Campaign">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="description" property="description" />
+        <result column="type" property="type" />
+        <result column="status" property="status" />
+        <result column="start_time" property="startTime" />
+        <result column="end_time" property="endTime" />
+        <result column="budget" property="budget" />
+        <result column="spent" property="spent" />
+        <result column="target_audience" property="targetAudience" />
+        <result column="channels" property="channels" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 根据ID查询活动 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM t_campaign WHERE id = #{id}
+    </select>
+
+    <!-- 查询活动列表 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM t_campaign
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="type != null">
+                AND type = #{type}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <!-- 查询活动总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_campaign
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="type != null">
+                AND type = #{type}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!-- 插入活动 -->
+    <insert id="insert" parameterType="com.yin.yin.model.Campaign" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_campaign (
+            name, description, type, status, start_time, end_time,
+            budget, spent, target_audience, channels, create_time, update_time
+        ) VALUES (
+            #{name}, #{description}, #{type}, #{status}, #{startTime}, #{endTime},
+            #{budget}, #{spent}, #{targetAudience}, #{channels}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 更新活动 -->
+    <update id="update" parameterType="com.yin.yin.model.Campaign">
+        UPDATE t_campaign
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="budget != null">budget = #{budget},</if>
+            <if test="spent != null">spent = #{spent},</if>
+            <if test="targetAudience != null">target_audience = #{targetAudience},</if>
+            <if test="channels != null">channels = #{channels},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除活动 -->
+    <delete id="deleteById">
+        DELETE from t_ampaign WHERE id = #{id}
+    </delete>
+
+    <!-- 查询所有活动类型 -->
+    <select id="selectAllTypes" resultType="com.yin.yin.model.CampaignType">
+        SELECT * from t_ampaign_type
+    </select>
+
+    <!-- 查询所有活动状态 -->
+    <select id="selectAllStatus" resultType="com.yin.yin.model.CampaignStatus">
+        SELECT * from t_ampaign_status
+    </select>
+
+    <!-- 根据活动ID查询关联套餐 -->
+    <select id="selectPackagesByCampaignId" resultType="com.yin.yin.model.CampaignPackage">
+        SELECT * from t_ampaign_package WHERE campaign_id = #{campaignId}
+    </select>
+
+    <!-- 插入活动关联套餐 -->
+    <insert id="insertCampaignPackage" parameterType="com.yin.yin.model.CampaignPackage">
+        INSERT INTO t_campaign_package (campaign_id, package_id, discount, create_time)
+        VALUES (#{campaignId}, #{packageId}, #{discount}, NOW())
+    </insert>
+
+    <!-- 删除活动关联套餐 -->
+    <delete id="deleteCampaignPackagesByCampaignId">
+        DELETE from t_ampaign_package WHERE campaign_id = #{campaignId}
+    </delete>
+</mapper>

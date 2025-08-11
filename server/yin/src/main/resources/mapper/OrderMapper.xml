@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yin.yin.mapper.OrderMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.yin.yin.model.Order">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="package_id" property="packageId" />
+        <result column="campaign_id" property="campaignId" />
+        <result column="amount" property="amount" />
+        <result column="discount" property="discount" />
+        <result column="actual_amount" property="actualAmount" />
+        <result column="status" property="status" />
+        <result column="payment_method" property="paymentMethod" />
+        <result column="payment_time" property="paymentTime" />
+        <result column="source" property="source" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 根据ID查询订单 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * from `t_order` WHERE id = #{id}
+    </select>
+
+    <!-- 查询订单列表 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * from `t_order`
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (id LIKE CONCAT('%', #{keyword}, '%') OR remark LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="source != null and source != ''">
+                AND source = #{source}
+            </if>
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                AND create_time BETWEEN #{startDate} AND #{endDate}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <!-- 查询订单总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) from `t_order`
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (id LIKE CONCAT('%', #{keyword}, '%') OR remark LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="source != null and source != ''">
+                AND source = #{source}
+            </if>
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                AND create_time BETWEEN #{startDate} AND #{endDate}
+            </if>
+        </where>
+    </select>
+
+    <!-- 插入订单 -->
+    <insert id="insert" parameterType="com.yin.yin.model.Order">
+        INSERT INTO `t_order` (
+            id, user_id, package_id, campaign_id, amount, discount, actual_amount,
+            status, payment_method, payment_time, source, remark, create_time, update_time
+        ) VALUES (
+            #{id}, #{userId}, #{packageId}, #{campaignId}, #{amount}, #{discount}, #{actualAmount},
+            #{status}, #{paymentMethod}, #{paymentTime}, #{source}, #{remark}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 更新订单 -->
+    <update id="update" parameterType="com.yin.yin.model.Order">
+        UPDATE `t_order`
+        <set>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="packageId != null">package_id = #{packageId},</if>
+            <if test="campaignId != null">campaign_id = #{campaignId},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="discount != null">discount = #{discount},</if>
+            <if test="actualAmount != null">actual_amount = #{actualAmount},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="paymentMethod != null">payment_method = #{paymentMethod},</if>
+            <if test="paymentTime != null">payment_time = #{paymentTime},</if>
+            <if test="source != null">source = #{source},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除订单 -->
+    <delete id="deleteById">
+        DELETE from `t_order` WHERE id = #{id}
+    </delete>
+
+    <!-- 查询所有订单状态 -->
+    <select id="selectAllStatus" resultType="com.yin.yin.model.OrderStatus">
+        SELECT * from t_order_status
+    </select>
+
+    <!-- 查询所有支付方式 -->
+    <select id="selectAllPaymentMethods" resultType="com.yin.yin.model.PaymentMethod">
+        SELECT * from t_payment_method
+    </select>
+
+    <!-- 查询所有订单来源 -->
+    <select id="selectAllSources" resultType="com.yin.yin.model.OrderSource">
+        SELECT * from t_order_source
+    </select>
+
+    <!-- 根据订单ID查询订单日志 -->
+    <select id="selectLogsByOrderId" resultType="com.yin.yin.model.OrderLog">
+        SELECT * from t_order_log WHERE order_id = #{orderId} ORDER BY create_time DESC
+    </select>
+
+    <!-- 插入订单日志 -->
+    <insert id="insertLog" parameterType="com.yin.yin.model.OrderLog">
+        INSERT INTO t_order_log (
+            order_id, operator_id, operator_name, action, content, create_time
+        ) VALUES (
+            #{orderId}, #{operatorId}, #{operatorName}, #{action}, #{content}, NOW()
+        )
+    </insert>
+
+    <!-- 查询订单统计数据 -->
+    <select id="selectStatistics" resultType="java.util.Map">
+        SELECT
+            COUNT(*) as total_orders,
+            SUM(actual_amount) as total_amount,
+            AVG(actual_amount) as average_amount
+        from `t_order`
+        <where>
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                AND create_time BETWEEN #{startDate} AND #{endDate}
+            </if>
+        </where>
+    </select>
+</mapper>

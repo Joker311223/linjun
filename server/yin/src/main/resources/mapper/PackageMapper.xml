@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yin.yin.mapper.PackageMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.yin.yin.model.Package">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="description" property="description" />
+        <result column="type" property="type" />
+        <result column="price" property="price" />
+        <result column="original_price" property="originalPrice" />
+        <result column="duration" property="duration" />
+        <result column="duration_unit" property="durationUnit" />
+        <result column="features" property="features" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 根据ID查询套餐 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * from t_package WHERE id = #{id}
+    </select>
+
+    <!-- 查询套餐列表 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * from t_package
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="type != null">
+                AND type = #{type}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <!-- 查询套餐总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) from t_package
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="type != null">
+                AND type = #{type}
+            </if>
+        </where>
+    </select>
+
+    <!-- 插入套餐 -->
+    <insert id="insert" parameterType="com.yin.yin.model.Package" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_package (
+            name, description, type, price, original_price, duration,
+            duration_unit, features, status, create_time, update_time
+        ) VALUES (
+            #{name}, #{description}, #{type}, #{price}, #{originalPrice}, #{duration},
+            #{durationUnit}, #{features}, #{status}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 更新套餐 -->
+    <update id="update" parameterType="com.yin.yin.model.Package">
+        UPDATE t_package
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="originalPrice != null">original_price = #{originalPrice},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="durationUnit != null">duration_unit = #{durationUnit},</if>
+            <if test="features != null">features = #{features},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除套餐 -->
+    <delete id="deleteById">
+        DELETE from t_package WHERE id = #{id}
+    </delete>
+
+    <!-- 查询所有套餐类型 -->
+    <select id="selectAllTypes" resultType="com.yin.yin.model.PackageType">
+        SELECT * from t_package_type
+    </select>
+
+    <!-- 根据ID查询套餐类型 -->
+    <select id="selectTypeById" resultType="com.yin.yin.model.PackageType">
+        SELECT * from t_package_type WHERE id = #{id}
+    </select>
+</mapper>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yin.yin.mapper.UserMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.yin.yin.model.User">
+        <id column="id" property="id" />
+        <result column="username" property="username" />
+        <result column="password" property="password" />
+        <result column="real_name" property="realName" />
+        <result column="email" property="email" />
+        <result column="phone" property="phone" />
+        <result column="avatar" property="avatar" />
+        <result column="status" property="status" />
+        <result column="roles" property="roles" />
+        <result column="permissions" property="permissions" />
+        <result column="department" property="department" />
+        <result column="position" property="position" />
+        <result column="register_time" property="registerTime" />
+        <result column="last_login_time" property="lastLoginTime" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 根据用户名查询用户 -->
+    <select id="selectByUsername" resultMap="BaseResultMap">
+        SELECT * from t_user WHERE username = #{username}
+    </select>
+
+    <!-- 根据ID查询用户 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * from t_user WHERE id = #{id}
+    </select>
+
+    <!-- 查询用户列表 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * from t_user
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (username LIKE CONCAT('%', #{keyword}, '%')
+                OR real_name LIKE CONCAT('%', #{keyword}, '%')
+                OR email LIKE CONCAT('%', #{keyword}, '%')
+                OR phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                AND register_time BETWEEN #{startDate} AND #{endDate}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <!-- 查询用户总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) from t_user
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (username LIKE CONCAT('%', #{keyword}, '%')
+                OR real_name LIKE CONCAT('%', #{keyword}, '%')
+                OR email LIKE CONCAT('%', #{keyword}, '%')
+                OR phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                AND register_time BETWEEN #{startDate} AND #{endDate}
+            </if>
+        </where>
+    </select>
+
+    <!-- 插入用户 -->
+    <insert id="insert" parameterType="com.yin.yin.model.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_user (
+            username, password, real_name, email, phone, avatar, status,
+            roles, permissions, department, position, register_time, last_login_time,
+            create_time, update_time
+        ) VALUES (
+            #{username}, #{password}, #{realName}, #{email}, #{phone}, #{avatar}, #{status},
+            #{roles}, #{permissions}, #{department}, #{position}, #{registerTime}, #{lastLoginTime},
+            NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 更新用户 -->
+    <update id="update" parameterType="com.yin.yin.model.User">
+        UPDATE t_user
+        <set>
+            <if test="password != null">password = #{password},</if>
+            <if test="realName != null">real_name = #{realName},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="roles != null">roles = #{roles},</if>
+            <if test="permissions != null">permissions = #{permissions},</if>
+            <if test="department != null">department = #{department},</if>
+            <if test="position != null">position = #{position},</if>
+            <if test="lastLoginTime != null">last_login_time = #{lastLoginTime},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除用户 -->
+    <delete id="deleteById">
+        DELETE from t_user WHERE id = #{id}
+    </delete>
+
+    <!-- 更新用户最后登录时间 -->
+    <update id="updateLastLoginTime">
+        UPDATE t_user SET last_login_time = #{lastLoginTime}, update_time = NOW() WHERE id = #{id}
+    </update>
+</mapper>

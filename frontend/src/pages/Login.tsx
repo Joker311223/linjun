@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Input, Button, Card, Image, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { login } from '../services/userService';
 
 const { Title } = Typography;
 
@@ -18,15 +18,15 @@ const Login: React.FC = () => {
   const onFinish = async (values: LoginFormData) => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/user/login', values);
-      if (response.data.code === 200) {
+      const response = await login(values.username, values.password);
+      if (response.code === 200) {
         // 登录成功
-        localStorage.setItem('token', response.data.data.token);
-        localStorage.setItem('userInfo', JSON.stringify(response.data.data));
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('userInfo', JSON.stringify(response.data));
         message.success('登录成功');
         navigate('/');
       } else {
-        message.error(response.data.message || '登录失败');
+        message.error(response.message || '登录失败');
       }
     } catch (error) {
       message.error('登录失败，请稍后再试');
