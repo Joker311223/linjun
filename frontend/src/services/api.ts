@@ -36,7 +36,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => {
     // 如果返回的状态码为200，说明接口请求成功，可以正常拿到数据
-    return response.data;
+    return response;
   },
   error => {
     if (error.response) {

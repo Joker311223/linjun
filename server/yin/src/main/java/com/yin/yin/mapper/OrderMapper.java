@@ -87,4 +87,34 @@ public interface OrderMapper {
     Map<String, Object> selectStatistics(@Param("startDate") String startDate,
                                         @Param("endDate") String endDate,
                                         @Param("timeUnit") String timeUnit);
+
+    /**
+     * 查询仪表盘概览数据
+     */
+    Map<String, Object> selectDashboardOverview();
+
+    /**
+     * 查询每日趋势数据
+     */
+    List<Map<String, Object>> selectDailyTrend();
+
+    /**
+     * 查询套餐类型分布
+     */
+    List<Map<String, Object>> selectPackageTypeDistribution();
+
+    /**
+     * 查询热门套餐
+     */
+    List<Map<String, Object>> selectHotPackages();
+
+    /**
+     * 查询最近订单
+     */
+    List<Map<String, Object>> selectRecentOrders();
+
+    /**
+     * 查询订单来源分布
+     */
+    List<Map<String, Object>> selectOrderSourceDistribution();
 }

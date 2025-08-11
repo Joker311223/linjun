@@ -147,4 +147,92 @@
             </if>
         </where>
     </select>
+
+    <!-- 查询仪表盘概览数据 -->
+    <select id="selectDashboardOverview" resultType="java.util.Map">
+        SELECT
+            IFNULL(SUM(pay_amount), 0) as total_sales,
+            COUNT(*) as total_orders,
+            (SELECT COUNT(*) FROM t_user) as total_users,
+            (SELECT COUNT(*) FROM t_package) as total_packages
+        FROM t_order
+    </select>
+
+    <!-- 查询每日趋势数据 -->
+    <select id="selectDailyTrend" resultType="java.util.Map">
+        SELECT
+            DATE_FORMAT(create_time, '%Y-%m-%d') as day,
+            SUM(pay_amount) as sales,
+            COUNT(*) as orders,
+            COUNT(DISTINCT user_id) as users
+        FROM t_order
+        WHERE create_time >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        GROUP BY DATE_FORMAT(create_time, '%Y-%m-%d')
+        ORDER BY day
+    </select>
+
+    <!-- 查询套餐类型分布 -->
+    <select id="selectPackageTypeDistribution" resultType="java.util.Map">
+        SELECT
+            pt.name as name,
+            COUNT(o.id) as value
+        FROM t_order o
+        JOIN t_package p ON o.package_id = p.id
+        JOIN t_package_type pt ON p.type = pt.id
+        GROUP BY pt.name
+        ORDER BY value DESC
+    </select>
+
+    <!-- 查询热门套餐 -->
+    <select id="selectHotPackages" resultType="java.util.Map">
+        SELECT
+            p.id as id,
+            p.name as name,
+            COUNT(o.id) as sales,
+            ROUND((COUNT(o.id) / (
+                SELECT COUNT(*) FROM t_order
+                WHERE create_time >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            ) * 100), 0) as growth
+        FROM t_order o
+        JOIN t_package p ON o.package_id = p.id
+        WHERE o.create_time >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY p.id, p.name
+        ORDER BY sales DESC
+        LIMIT 4
+    </select>
+
+    <!-- 查询最近订单 -->
+    <select id="selectRecentOrders" resultType="java.util.Map">
+        SELECT
+            o.id as id,
+            o.package_name as packageName,
+            pt.name as packageType,
+            o.pay_amount as amount,
+            o.payment_method as paymentMethod,
+            o.source as source,
+            CASE o.status
+                WHEN 0 THEN '待支付'
+                WHEN 1 THEN '已支付'
+                WHEN 2 THEN '已取消'
+                WHEN 3 THEN '已退款'
+                WHEN 4 THEN '已完成'
+                ELSE '未知'
+            END as status,
+            DATE_FORMAT(o.create_time, '%Y-%m-%d %H:%i:%s') as createTime
+        FROM t_order o
+        JOIN t_package p ON o.package_id = p.id
+        JOIN t_package_type pt ON p.type = pt.id
+        ORDER BY o.create_time DESC
+        LIMIT 10
+    </select>
+
+    <!-- 查询订单来源分布 -->
+    <select id="selectOrderSourceDistribution" resultType="java.util.Map">
+        SELECT
+            source as name,
+            COUNT(*) as value
+        FROM t_order
+        GROUP BY source
+        ORDER BY value DESC
+    </select>
 </mapper>

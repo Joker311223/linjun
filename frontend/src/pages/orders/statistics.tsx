@@ -100,7 +100,7 @@ const OrderStatistics: React.FC = () => {
         {
           name: '订单金额',
           type: 'line',
-          data: timeData.amounts,
+          data: timeData?.amounts,
           smooth: true,
           areaStyle: {
             opacity: 0.2
@@ -118,7 +118,7 @@ const OrderStatistics: React.FC = () => {
         {
           name: '订单数量',
           type: 'line',
-          data: timeData.orders,
+          data: timeData?.orders,
           smooth: true,
           areaStyle: {
             opacity: 0.2
@@ -136,7 +136,7 @@ const OrderStatistics: React.FC = () => {
         {
           name: '用户数量',
           type: 'line',
-          data: timeData.users,
+          data: timeData?.users,
           smooth: true,
           areaStyle: {
             opacity: 0.2
@@ -154,7 +154,7 @@ const OrderStatistics: React.FC = () => {
         {
           name: '订单金额',
           type: 'line',
-          data: timeData.amounts,
+          data: timeData?.amounts,
           smooth: true,
           lineStyle: {
             width: 2
@@ -166,7 +166,7 @@ const OrderStatistics: React.FC = () => {
         {
           name: '订单数量',
           type: 'line',
-          data: timeData.orders,
+          data: timeData?.orders,
           smooth: true,
           lineStyle: {
             width: 2
@@ -178,7 +178,7 @@ const OrderStatistics: React.FC = () => {
         {
           name: '用户数量',
           type: 'line',
-          data: timeData.users,
+          data: timeData?.users,
           smooth: true,
           lineStyle: {
             width: 2
@@ -212,7 +212,7 @@ const OrderStatistics: React.FC = () => {
       xAxis: {
         type: 'category',
         boundaryGap: false,
-        data: timeData.dates
+        data: timeData?.dates
       },
       yAxis: {
         type: 'value'
@@ -235,7 +235,7 @@ const OrderStatistics: React.FC = () => {
       legend: {
         orient: 'vertical',
         left: 10,
-        data: packageData.names
+        data: packageData?.names
       },
       series: [
         {
@@ -262,7 +262,7 @@ const OrderStatistics: React.FC = () => {
           labelLine: {
             show: false
           },
-          data: packageData.names.map((name, index) => ({
+          data: packageData?.names?.map?.((name, index) => ({
             value: packageData.values[index],
             name
           }))
@@ -295,13 +295,13 @@ const OrderStatistics: React.FC = () => {
       },
       yAxis: {
         type: 'category',
-        data: payMethodData.methods
+        data: payMethodData?.methods
       },
       series: [
         {
           name: '订单数量',
           type: 'bar',
-          data: payMethodData.values,
+          data: payMethodData?.values,
           itemStyle: {
             color: function(params: any) {
               const colorList = ['#1890ff', '#52c41a', '#fa8c16', '#f5222d', '#722ed1'];
@@ -311,6 +311,14 @@ const OrderStatistics: React.FC = () => {
         }
       ]
     };
+  };
+
+  // 检查 comparedToLastPeriod 是否存在
+  const getComparisonValue = (field: 'amount' | 'orders' | 'users') => {
+    if (!statisticsData || !statisticsData.comparedToLastPeriod) {
+      return 0;
+    }
+    return statisticsData.comparedToLastPeriod[field] || 0;
   };
 
   return (
@@ -354,7 +362,7 @@ const OrderStatistics: React.FC = () => {
                       valueStyle={{ color: '#3f8600' }}
                       prefix="¥"
                       suffix={
-                        statisticsData.comparedToLastPeriod.amount > 0 ? (
+                        getComparisonValue('amount') > 0 ? (
                           <ArrowUpOutlined style={{ color: '#3f8600' }} />
                         ) : (
                           <ArrowDownOutlined style={{ color: '#cf1322' }} />
@@ -364,11 +372,11 @@ const OrderStatistics: React.FC = () => {
                     <div style={{ fontSize: 12, color: '#999', marginTop: 8 }}>
                       较上期
                       <span style={{
-                        color: statisticsData.comparedToLastPeriod.amount > 0 ? '#3f8600' : '#cf1322',
+                        color: getComparisonValue('amount') > 0 ? '#3f8600' : '#cf1322',
                         marginLeft: 4
                       }}>
-                        {statisticsData.comparedToLastPeriod.amount > 0 ? '+' : ''}
-                        {statisticsData.comparedToLastPeriod.amount}%
+                        {getComparisonValue('amount') > 0 ? '+' : ''}
+                        {getComparisonValue('amount')}%
                       </span>
                     </div>
                   </Card>
@@ -381,7 +389,7 @@ const OrderStatistics: React.FC = () => {
                       valueStyle={{ color: '#1890ff' }}
                       prefix={<ShoppingCartOutlined />}
                       suffix={
-                        statisticsData.comparedToLastPeriod.orders > 0 ? (
+                        getComparisonValue('orders') > 0 ? (
                           <ArrowUpOutlined style={{ color: '#3f8600' }} />
                         ) : (
                           <ArrowDownOutlined style={{ color: '#cf1322' }} />
@@ -391,11 +399,11 @@ const OrderStatistics: React.FC = () => {
                     <div style={{ fontSize: 12, color: '#999', marginTop: 8 }}>
                       较上期
                       <span style={{
-                        color: statisticsData.comparedToLastPeriod.orders > 0 ? '#3f8600' : '#cf1322',
+                        color: getComparisonValue('orders') > 0 ? '#3f8600' : '#cf1322',
                         marginLeft: 4
                       }}>
-                        {statisticsData.comparedToLastPeriod.orders > 0 ? '+' : ''}
-                        {statisticsData.comparedToLastPeriod.orders}%
+                        {getComparisonValue('orders') > 0 ? '+' : ''}
+                        {getComparisonValue('orders')}%
                       </span>
                     </div>
                   </Card>
@@ -408,7 +416,7 @@ const OrderStatistics: React.FC = () => {
                       valueStyle={{ color: '#fa8c16' }}
                       prefix={<UserOutlined />}
                       suffix={
-                        statisticsData.comparedToLastPeriod.users > 0 ? (
+                        getComparisonValue('users') > 0 ? (
                           <ArrowUpOutlined style={{ color: '#3f8600' }} />
                         ) : (
                           <ArrowDownOutlined style={{ color: '#cf1322' }} />
@@ -418,11 +426,11 @@ const OrderStatistics: React.FC = () => {
                     <div style={{ fontSize: 12, color: '#999', marginTop: 8 }}>
                       较上期
                       <span style={{
-                        color: statisticsData.comparedToLastPeriod.users > 0 ? '#3f8600' : '#cf1322',
+                        color: getComparisonValue('users') > 0 ? '#3f8600' : '#cf1322',
                         marginLeft: 4
                       }}>
-                        {statisticsData.comparedToLastPeriod.users > 0 ? '+' : ''}
-                        {statisticsData.comparedToLastPeriod.users}%
+                        {getComparisonValue('users') > 0 ? '+' : ''}
+                        {getComparisonValue('users')}%
                       </span>
                     </div>
                   </Card>
