@@ -4,6 +4,7 @@ import { EyeOutlined, DownloadOutlined, SearchOutlined, PlusOutlined } from '@an
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import api from '../../services/api';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -69,7 +70,7 @@ const OrderList: React.FC = () => {
           params.endDate = dateRange[1].format('YYYY-MM-DD');
         }
 
-        const response = await axios.get('/api/orders/list', { params });
+        const response = await api.get('/api/orders/list', { params });
 
         if (response.data.code === 200) {
           setOrders(response.data.data.list);

@@ -4,6 +4,7 @@ import { ArrowUpOutlined, ArrowDownOutlined, DollarOutlined, ShoppingCartOutline
 import axios from 'axios';
 import dayjs from 'dayjs';
 import ReactECharts from 'echarts-for-react';
+import api from '../../services/api';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -55,7 +56,7 @@ const OrderStatistics: React.FC = () => {
           timeUnit
         };
 
-        const response = await axios.get('/api/orders/statistics', { params });
+        const response = await api.get('/api/orders/statistics', { params });
 
         if (response.data.code === 200) {
           setStatisticsData(response.data.data);

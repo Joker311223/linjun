@@ -88,7 +88,7 @@ public class Order {
     /**
      * 来源ID
      */
-    private Integer sourceId;
+    private String sourceId;
 
     /**
      * 订单状态：0-待支付，1-已支付，2-已取消，3-已退款，4-已完成

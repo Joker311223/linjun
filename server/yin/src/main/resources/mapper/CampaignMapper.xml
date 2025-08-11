@@ -92,22 +92,22 @@
 
     <!-- 删除活动 -->
     <delete id="deleteById">
-        DELETE from t_ampaign WHERE id = #{id}
+        DELETE from t_campaign WHERE id = #{id}
     </delete>
 
     <!-- 查询所有活动类型 -->
     <select id="selectAllTypes" resultType="com.yin.yin.model.CampaignType">
-        SELECT * from t_ampaign_type
+        SELECT * from t_campaign_type
     </select>
 
     <!-- 查询所有活动状态 -->
     <select id="selectAllStatus" resultType="com.yin.yin.model.CampaignStatus">
-        SELECT * from t_ampaign_status
+        SELECT * from t_campaign_status
     </select>
 
     <!-- 根据活动ID查询关联套餐 -->
     <select id="selectPackagesByCampaignId" resultType="com.yin.yin.model.CampaignPackage">
-        SELECT * from t_ampaign_package WHERE campaign_id = #{campaignId}
+        SELECT * from t_campaign_package WHERE campaign_id = #{campaignId}
     </select>
 
     <!-- 插入活动关联套餐 -->
@@ -118,6 +118,6 @@
 
     <!-- 删除活动关联套餐 -->
     <delete id="deleteCampaignPackagesByCampaignId">
-        DELETE from t_ampaign_package WHERE campaign_id = #{campaignId}
+        DELETE from t_campaign_package WHERE campaign_id = #{campaignId}
     </delete>
 </mapper>

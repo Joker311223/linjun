@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Statistic, Table, Tag, Spin, Typography, Divider } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined, UserOutlined, ShoppingCartOutlined, DollarOutlined, AppstoreOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import api from '../../services/api';
 
 const { Title } = Typography;
 
@@ -46,7 +47,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('/api/statistics/dashboard');
+        const response = await api.get('/api/statistics/dashboard');
         if (response.data.code === 200) {
           setData(response.data.data);
         }

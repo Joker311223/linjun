@@ -3,6 +3,7 @@ import { Card, Table, Tag, Statistic, Row, Col, DatePicker, Button, Space, Progr
 import { ArrowUpOutlined, ArrowDownOutlined, DownloadOutlined, ReloadOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import api from '../../services/api';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -59,7 +60,7 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/sources/${sourceId}`, {
+      const response = await api.get(`/api/sources/${sourceId}`, {
         params: {
           startDate: dateRange[0].format('YYYY-MM-DD'),
           endDate: dateRange[1].format('YYYY-MM-DD')

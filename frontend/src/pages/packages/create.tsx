@@ -3,6 +3,7 @@ import { Card, Form, Input, InputNumber, Select, Switch, Button, Space, message,
 import { PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import api from '../../services/api';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -27,7 +28,7 @@ const PackageCreate: React.FC = () => {
   useEffect(() => {
     const fetchPackageTypes = async () => {
       try {
-        const response = await axios.get('/api/packages/types');
+        const response = await api.get('/api/packages/types');
         if (response.data.code === 200) {
           setPackageTypes(response.data.data);
         }
@@ -52,7 +53,7 @@ const PackageCreate: React.FC = () => {
       };
 
       // 发送创建请求
-      const response = await axios.post('/api/packages/create', packageData);
+      const response = await api.post('/api/packages/create', packageData);
 
       if (response.data.code === 200) {
         message.success('套餐创建成功');

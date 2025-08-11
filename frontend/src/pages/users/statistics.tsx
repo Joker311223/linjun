@@ -4,6 +4,7 @@ import { ArrowUpOutlined, ArrowDownOutlined, UserOutlined, TeamOutlined, RiseOut
 import axios from 'axios';
 import dayjs from 'dayjs';
 import ReactECharts from 'echarts-for-react';
+import api from '../../services/api';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -67,7 +68,7 @@ const UserStatistics: React.FC = () => {
           timeUnit
         };
 
-        const response = await axios.get('/api/users/statistics', { params });
+        const response = await api.get('/api/users/statistics', { params });
 
         if (response.data.code === 200) {
           setStatisticsData(response.data.data);

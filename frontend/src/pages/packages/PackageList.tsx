@@ -3,6 +3,7 @@ import { Table, Card, Button, Input, Select, Tag, Space, Modal, message, Tooltip
 import { PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import api from '../../services/api';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -50,7 +51,7 @@ const PackageList: React.FC = () => {
   useEffect(() => {
     const fetchPackageTypes = async () => {
       try {
-        const response = await axios.get('/api/packages/types');
+        const response = await api.get('/api/packages/types');
         if (response.data.code === 200) {
           setPackageTypes(response.data.data);
         }
@@ -67,7 +68,7 @@ const PackageList: React.FC = () => {
     const fetchPackages = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/api/packages/list', {
+        const response = await api.get('/api/packages/list', {
           params: {
             pageNum,
             pageSize,

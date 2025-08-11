@@ -1,9 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Input, Select, Tag, Space, DatePicker, Badge, Avatar, Tooltip } from 'antd';
-import { EyeOutlined, SearchOutlined, UserOutlined, DownloadOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import dayjs from 'dayjs';
-import { getUserList } from '../../services/userService';
+import React, { useState, useEffect } from "react";
+import {
+  Table,
+  Card,
+  Button,
+  Input,
+  Select,
+  Tag,
+  Space,
+  DatePicker,
+  Badge,
+  Avatar,
+  Tooltip,
+} from "antd";
+import {
+  EyeOutlined,
+  SearchOutlined,
+  UserOutlined,
+  DownloadOutlined,
+} from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import { getUserList } from "../../services/userService";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -16,7 +33,7 @@ interface User {
   email: string;
   phone: string;
   status: number;
-  roles: string[];
+  roles: string;
   registerTime: string;
   lastLoginTime: string | null;
   source: string;
@@ -30,9 +47,11 @@ const UserList: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [pageNum, setPageNum] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [keyword, setKeyword] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([null, null]);
+  const [keyword, setKeyword] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [dateRange, setDateRange] = useState<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null]
+  >([null, null]);
 
   const navigate = useNavigate();
 
@@ -45,7 +64,7 @@ const UserList: React.FC = () => {
         const params: any = {
           pageNum,
           pageSize,
-          keyword
+          keyword,
         };
 
         if (selectedStatus) {
@@ -53,8 +72,8 @@ const UserList: React.FC = () => {
         }
 
         if (dateRange[0] && dateRange[1]) {
-          params.startDate = dateRange[0].format('YYYY-MM-DD');
-          params.endDate = dateRange[1].format('YYYY-MM-DD');
+          params.startDate = dateRange[0].format("YYYY-MM-DD");
+          params.endDate = dateRange[1].format("YYYY-MM-DD");
         }
 
         const response = await getUserList(params);
@@ -64,7 +83,7 @@ const UserList: React.FC = () => {
           setTotal(response.data.total);
         }
       } catch (error) {
-        console.error('获取用户列表失败:', error);
+        console.error("获取用户列表失败:", error);
       } finally {
         setLoading(false);
       }
@@ -105,7 +124,7 @@ const UserList: React.FC = () => {
   // 导出用户数据
   const handleExport = () => {
     // 实际项目中应该调用后端接口导出数据
-    console.log('导出用户数据');
+    console.log("导出用户数据");
   };
 
   // 获取用户状态标签
@@ -121,15 +140,15 @@ const UserList: React.FC = () => {
   };
 
   // 获取用户角色标签
-  const getRoleTags = (roles: string[]) => {
+  const getRoleTags = (roles: string) => {
+    let color = "default";
+    if (roles === "admin") color = "red";
+    else if (roles === "editor") color = "blue";
     return (
       <Space>
-        {roles.map(role => {
-          let color = 'default';
-          if (role === 'admin') color = 'red';
-          else if (role === 'editor') color = 'blue';
-          return <Tag key={role} color={color}>{role}</Tag>;
-        })}
+        <Tag key={roles} color={color}>
+          {roles}
+        </Tag>
       </Space>
     );
   };
@@ -137,86 +156,73 @@ const UserList: React.FC = () => {
   // 表格列定义
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 60
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      width: 60,
     },
     {
-      title: '用户信息',
-      key: 'userInfo',
+      title: "用户信息",
+      key: "userInfo",
       width: 200,
       render: (record: User) => (
         <Space>
-          <Avatar
-            icon={<UserOutlined />}
-            size="large"
-          />
+          <Avatar icon={<UserOutlined />} size="large" />
           <div>
-            <div style={{ fontWeight: 'bold' }}>{record.realName}</div>
-            <div style={{ fontSize: 12, color: '#999' }}>{record.username}</div>
+            <div style={{ fontWeight: "bold" }}>{record.realName}</div>
+            <div style={{ fontSize: 12, color: "#999" }}>{record.username}</div>
           </div>
         </Space>
-      )
+      ),
     },
     {
-      title: '联系方式',
-      key: 'contact',
+      title: "联系方式",
+      key: "contact",
       width: 180,
       render: (record: User) => (
         <div>
           <div>{record.email}</div>
           <div>{record.phone}</div>
         </div>
-      )
+      ),
     },
     {
-      title: '来源',
-      dataIndex: 'source',
-      key: 'source',
-      width: 100
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
+      title: "来源",
+      dataIndex: "source",
+      key: "source",
       width: 100,
-      render: (status: number) => getStatusTag(status)
     },
     {
-      title: '角色',
-      key: 'roles',
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
+      width: 100,
+      render: (status: number) => getStatusTag(status),
+    },
+    {
+      title: "角色",
+      key: "roles",
       width: 120,
-      render: (record: User) => getRoleTags(record.roles)
+      render: (record: User) => getRoleTags(record.roles),
     },
     {
-      title: '消费情况',
-      key: 'consumption',
-      width: 150,
-      render: (record: User) => (
-        <div>
-          <div>总消费: ¥{record.totalSpent.toFixed(2)}</div>
-          <div>订单数: {record.orderCount}</div>
-        </div>
-      )
-    },
-    {
-      title: '注册时间',
-      dataIndex: 'registerTime',
-      key: 'registerTime',
+      title: "注册时间",
+      dataIndex: "registerTime",
+      key: "registerTime",
       width: 180,
-      render: (text: string) => dayjs(text).format('YYYY-MM-DD HH:mm:ss')
+      render: (text: string) => dayjs(text).format("YYYY-MM-DD HH:mm:ss"),
     },
     {
-      title: '最后登录',
-      dataIndex: 'lastLoginTime',
-      key: 'lastLoginTime',
+      title: "最后登录",
+      dataIndex: "lastLoginTime",
+      key: "lastLoginTime",
       width: 180,
-      render: (text: string) => text ? dayjs(text).format('YYYY-MM-DD HH:mm:ss') : '-'
+      render: (text: string) =>
+        text ? dayjs(text).format("YYYY-MM-DD HH:mm:ss") : "-",
     },
     {
-      title: '操作',
-      key: 'action',
+      title: "操作",
+      key: "action",
       width: 100,
       render: (record: User) => (
         <Button
@@ -224,8 +230,8 @@ const UserList: React.FC = () => {
           icon={<EyeOutlined />}
           onClick={() => handleView(record.id)}
         />
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -249,13 +255,10 @@ const UserList: React.FC = () => {
             <Option value="0">未激活</Option>
           </Select>
           <RangePicker
-            placeholder={['注册开始日期', '注册结束日期']}
+            placeholder={["注册开始日期", "注册结束日期"]}
             onChange={handleDateRangeChange}
           />
-          <Button
-            icon={<DownloadOutlined />}
-            onClick={handleExport}
-          >
+          <Button icon={<DownloadOutlined />} onClick={handleExport}>
             导出数据
           </Button>
         </Space>
@@ -270,7 +273,7 @@ const UserList: React.FC = () => {
           total: total,
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: (total) => `共 ${total} 条记录`
+          showTotal: (total) => `共 ${total} 条记录`,
         }}
         onChange={handleTableChange}
         loading={loading}

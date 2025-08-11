@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Form, Input, InputNumber, Select, Button, Space, message, Divider, Row, Col, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import api from '../../services/api';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -48,7 +49,7 @@ const OrderCreate: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('/api/packages/list', {
+        const response = await api.get('/api/packages/list', {
           params: { pageSize: 100 }
         });
         if (response.data.code === 200) {
@@ -80,7 +81,7 @@ const OrderCreate: React.FC = () => {
   useEffect(() => {
     const fetchPaymentMethods = async () => {
       try {
-        const response = await axios.get('/api/orders/payment-methods');
+        const response = await api.get('/api/orders/payment-methods');
         if (response.data.code === 200) {
           setPaymentMethods(response.data.data);
         }
@@ -97,7 +98,7 @@ const OrderCreate: React.FC = () => {
   useEffect(() => {
     const fetchOrderSources = async () => {
       try {
-        const response = await axios.get('/api/orders/sources');
+        const response = await api.get('/api/orders/sources');
         if (response.data.code === 200) {
           setOrderSources(response.data.data);
         }
@@ -175,7 +176,7 @@ const OrderCreate: React.FC = () => {
       };
 
       // 发送创建请求
-      const response = await axios.post('/api/orders/create', orderData);
+      const response = await api.post('/api/orders/create', orderData);
 
       if (response.data.code === 200) {
         message.success('订单创建成功');

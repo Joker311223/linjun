@@ -4,6 +4,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, 
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import api from '../../services/api';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -58,7 +59,7 @@ const CampaignList: React.FC = () => {
           params.endDate = dateRange[1].format('YYYY-MM-DD');
         }
 
-        const response = await axios.get('/api/campaigns/list', { params });
+        const response = await api.get('/api/campaigns/list', { params });
 
         if (response.data.code === 200) {
           setCampaigns(response.data.data.list);

@@ -6,6 +6,7 @@ import type { UploadFile } from 'antd/es/upload/interface';
 import type { RcFile } from 'antd/es/upload';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import api from '../../services/api';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -30,7 +31,7 @@ const CampaignCreate: React.FC = () => {
   useEffect(() => {
     const fetchCampaignTypes = async () => {
       try {
-        const response = await axios.get('/api/campaigns/types');
+        const response = await api.get('/api/campaigns/types');
         if (response.data.code === 200) {
           setCampaignTypes(response.data.data);
         }
@@ -63,7 +64,7 @@ const CampaignCreate: React.FC = () => {
       };
 
       // 发送创建请求
-      const response = await axios.post('/api/campaigns/create', campaignData);
+      const response = await api.post('/api/campaigns/create', campaignData);
 
       if (response.data.code === 200) {
         message.success('活动创建成功');

@@ -12,12 +12,12 @@ export const getUserInfo = (): Promise<ApiResponse> => {
 
 // 获取用户列表
 export const getUserList = (params: any): Promise<ApiResponse> => {
-  return api.get('/api/users/list', { params });
+  return api.get('/api/user/users/list', { params });
 };
 
 // 获取用户统计数据
 export const getUserStatistics = (): Promise<ApiResponse> => {
-  return api.get('/api/users/statistics');
+  return api.get('/api/user/users/statistics');
 };
 
 // 退出登录

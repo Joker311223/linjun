@@ -5,6 +5,7 @@ import type { UploadFile } from 'antd/es/upload/interface';
 import type { RcFile } from 'antd/es/upload';
 import axios from 'axios';
 import Logo from '../assets/images/logo';
+import api from '../services/api';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -78,7 +79,7 @@ const Settings: React.FC = () => {
     const fetchSettings = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/api/settings');
+        const response = await api.get('/api/settings');
 
         if (response.data.code === 200) {
           const data = response.data.data;
@@ -165,7 +166,7 @@ const Settings: React.FC = () => {
         values.favicon = faviconFile[0].response.url;
       }
 
-      const response = await axios.post('/api/settings/basic', values);
+      const response = await api.post('/api/settings/basic', values);
 
       if (response.data.code === 200) {
         message.success('基本设置保存成功');
@@ -184,7 +185,7 @@ const Settings: React.FC = () => {
   const handleMailSave = async (values: any) => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/settings/mail', values);
+      const response = await api.post('/api/settings/mail', values);
 
       if (response.data.code === 200) {
         message.success('邮件设置保存成功');
@@ -203,7 +204,7 @@ const Settings: React.FC = () => {
   const handlePaymentSave = async (values: any) => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/settings/payment', values);
+      const response = await api.post('/api/settings/payment', values);
 
       if (response.data.code === 200) {
         message.success('支付设置保存成功');
@@ -222,7 +223,7 @@ const Settings: React.FC = () => {
   const handleNotificationSave = async (values: any) => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/settings/notification', values);
+      const response = await api.post('/api/settings/notification', values);
 
       if (response.data.code === 200) {
         message.success('通知设置保存成功');
@@ -241,7 +242,7 @@ const Settings: React.FC = () => {
   const handleSecuritySave = async (values: any) => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/settings/security', values);
+      const response = await api.post('/api/settings/security', values);
 
       if (response.data.code === 200) {
         message.success('安全设置保存成功');
@@ -260,7 +261,7 @@ const Settings: React.FC = () => {
   const handleTestEmail = async () => {
     try {
       const values = mailForm.getFieldsValue();
-      const response = await axios.post('/api/settings/mail/test', values);
+      const response = await api.post('/api/settings/mail/test', values);
 
       if (response.data.code === 200) {
         message.success('测试邮件发送成功');
