@@ -13,10 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * 订单服务实现类
@@ -185,6 +182,78 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Map<String, Object> getOrderStatistics(String startDate, String endDate, String timeUnit) {
-        return orderMapper.selectStatistics(startDate, endDate, timeUnit);
+        // 如果没有提供日期范围，默认为最近30天
+        if (startDate == null || startDate.isEmpty() || endDate == null || endDate.isEmpty()) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            endDate = sdf.format(new Date());
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_MONTH, -30);
+            startDate = sdf.format(calendar.getTime());
+        }
+
+        // 1. 获取基本统计数据
+        Map<String, Object> statistics = orderMapper.selectStatistics(startDate, endDate, timeUnit);
+
+        // 2. 获取时间序列数据
+        List<Map<String, Object>> timeSeriesData = orderMapper.selectTimeSeriesData(startDate, endDate, timeUnit);
+
+        // 3. 获取套餐分布数据
+        List<Map<String, Object>> packageData = orderMapper.selectPackageDistribution(startDate, endDate);
+
+        // 4. 获取支付方式分布数据
+        List<Map<String, Object>> payMethodData = orderMapper.selectPayMethodDistribution(startDate, endDate);
+
+        // 5. 整合时间序列数据
+        Map<String, Object> timeData = new HashMap<>();
+        List<String> dates = new ArrayList<>();
+        List<Number> amounts = new ArrayList<>();
+        List<Number> orders = new ArrayList<>();
+        List<Number> users = new ArrayList<>();
+
+        for (Map<String, Object> data : timeSeriesData) {
+            dates.add((String) data.get("date"));
+            amounts.add((Number) data.get("amount"));
+            orders.add((Number) data.get("order_count"));
+            users.add((Number) data.get("user_count"));
+        }
+
+        timeData.put("dates", dates);
+        timeData.put("amounts", amounts);
+        timeData.put("orders", orders);
+        timeData.put("users", users);
+
+        // 6. 整合套餐分布数据
+        Map<String, Object> packageDistribution = new HashMap<>();
+        List<String> packageNames = new ArrayList<>();
+        List<Number> packageValues = new ArrayList<>();
+
+        for (Map<String, Object> data : packageData) {
+            packageNames.add((String) data.get("name"));
+            packageValues.add((Number) data.get("value"));
+        }
+
+        packageDistribution.put("names", packageNames);
+        packageDistribution.put("values", packageValues);
+
+        // 7. 整合支付方式分布数据
+        Map<String, Object> payMethodDistribution = new HashMap<>();
+        List<String> methods = new ArrayList<>();
+        List<Number> values = new ArrayList<>();
+
+        for (Map<String, Object> data : payMethodData) {
+            methods.add((String) data.get("method"));
+            values.add((Number) data.get("value"));
+        }
+
+        payMethodDistribution.put("methods", methods);
+        payMethodDistribution.put("values", values);
+
+        // 8. 将所有数据整合到结果中
+        statistics.put("timeData", timeData);
+        statistics.put("packageData", packageDistribution);
+        statistics.put("payMethodData", payMethodDistribution);
+
+        return statistics;
     }
 }

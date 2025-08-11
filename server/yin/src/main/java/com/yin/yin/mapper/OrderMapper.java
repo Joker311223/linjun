@@ -89,6 +89,25 @@ public interface OrderMapper {
                                         @Param("timeUnit") String timeUnit);
 
     /**
+     * 查询订单时间序列数据
+     */
+    List<Map<String, Object>> selectTimeSeriesData(@Param("startDate") String startDate,
+                                                 @Param("endDate") String endDate,
+                                                 @Param("timeUnit") String timeUnit);
+
+    /**
+     * 查询套餐销售分布数据
+     */
+    List<Map<String, Object>> selectPackageDistribution(@Param("startDate") String startDate,
+                                                      @Param("endDate") String endDate);
+
+    /**
+     * 查询支付方式分布数据
+     */
+    List<Map<String, Object>> selectPayMethodDistribution(@Param("startDate") String startDate,
+                                                        @Param("endDate") String endDate);
+
+    /**
      * 查询仪表盘概览数据
      */
     Map<String, Object> selectDashboardOverview();

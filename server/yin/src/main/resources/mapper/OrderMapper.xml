@@ -136,16 +136,66 @@
 
     <!-- 查询订单统计数据 -->
     <select id="selectStatistics" resultType="java.util.Map">
+        <bind name="currentPeriodStart" value="startDate"/>
+        <bind name="currentPeriodEnd" value="endDate"/>
+
+        <!-- 计算上一个时间段的开始和结束日期 -->
+        <bind name="periodDays" value="(new java.text.SimpleDateFormat('yyyy-MM-dd').parse(endDate).getTime() - new java.text.SimpleDateFormat('yyyy-MM-dd').parse(startDate).getTime()) / (24*60*60*1000) + 1"/>
+        <bind name="lastPeriodEnd" value="startDate"/>
+        <bind name="lastPeriodStart" value="new java.text.SimpleDateFormat('yyyy-MM-dd').format(new java.util.Date(new java.text.SimpleDateFormat('yyyy-MM-dd').parse(startDate).getTime() - periodDays * 24*60*60*1000))"/>
+
+        <!-- 当前时间段的统计数据 -->
         SELECT
-            COUNT(*) as total_orders,
-            SUM(pay_amount) as total_amount,
-            AVG(pay_amount) as average_amount
-        from `t_order`
-        <where>
-            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
-                AND create_time BETWEEN #{startDate} AND #{endDate}
-            </if>
-        </where>
+            IFNULL(SUM(current_period.pay_amount), 0) as totalAmount,
+            IFNULL(COUNT(current_period.id), 0) as totalOrders,
+            IFNULL(COUNT(DISTINCT current_period.user_id), 0) as totalUsers,
+            IFNULL(AVG(current_period.pay_amount), 0) as averageAmount,
+
+            <!-- 与上期比较的数据 -->
+            (
+                SELECT
+                    CASE
+                        WHEN IFNULL(SUM(last_period.pay_amount), 0) = 0 THEN 0
+                        ELSE ROUND((IFNULL(SUM(current_period.pay_amount), 0) - IFNULL(SUM(last_period.pay_amount), 0)) / IFNULL(SUM(last_period.pay_amount), 0) * 100, 2)
+                    END
+                FROM t_order current_period
+                LEFT JOIN (
+                    SELECT id, pay_amount FROM t_order
+                    WHERE create_time BETWEEN #{lastPeriodStart} AND #{lastPeriodEnd}
+                ) last_period ON 1=1
+                WHERE current_period.create_time BETWEEN #{currentPeriodStart} AND #{currentPeriodEnd}
+            ) as 'comparedToLastPeriod.amount',
+
+            (
+                SELECT
+                    CASE
+                        WHEN IFNULL(COUNT(last_period.id), 0) = 0 THEN 0
+                        ELSE ROUND((IFNULL(COUNT(current_period.id), 0) - IFNULL(COUNT(last_period.id), 0)) / IFNULL(COUNT(last_period.id), 0) * 100, 2)
+                    END
+                FROM t_order current_period
+                LEFT JOIN (
+                    SELECT id FROM t_order
+                    WHERE create_time BETWEEN #{lastPeriodStart} AND #{lastPeriodEnd}
+                ) last_period ON 1=1
+                WHERE current_period.create_time BETWEEN #{currentPeriodStart} AND #{currentPeriodEnd}
+            ) as 'comparedToLastPeriod.orders',
+
+            (
+                SELECT
+                    CASE
+                        WHEN IFNULL(COUNT(DISTINCT last_period.user_id), 0) = 0 THEN 0
+                        ELSE ROUND((IFNULL(COUNT(DISTINCT current_period.user_id), 0) - IFNULL(COUNT(DISTINCT last_period.user_id), 0)) / IFNULL(COUNT(DISTINCT last_period.user_id), 0) * 100, 2)
+                    END
+                FROM t_order current_period
+                LEFT JOIN (
+                    SELECT DISTINCT user_id FROM t_order
+                    WHERE create_time BETWEEN #{lastPeriodStart} AND #{lastPeriodEnd}
+                ) last_period ON 1=1
+                WHERE current_period.create_time BETWEEN #{currentPeriodStart} AND #{currentPeriodEnd}
+            ) as 'comparedToLastPeriod.users'
+
+        FROM t_order current_period
+        WHERE current_period.create_time BETWEEN #{currentPeriodStart} AND #{currentPeriodEnd}
     </select>
 
     <!-- 查询仪表盘概览数据 -->
@@ -233,6 +283,79 @@
             COUNT(*) as value
         FROM t_order
         GROUP BY source
+        ORDER BY value DESC
+    </select>
+
+    <!-- 查询订单时间序列数据 -->
+    <select id="selectTimeSeriesData" resultType="java.util.Map">
+        <choose>
+            <when test="timeUnit == 'day'">
+                SELECT
+                    DATE_FORMAT(create_time, '%Y-%m-%d') as date,
+                    SUM(pay_amount) as amount,
+                    COUNT(*) as order_count,
+                    COUNT(DISTINCT user_id) as user_count
+                FROM t_order
+                WHERE create_time BETWEEN #{startDate} AND #{endDate}
+                GROUP BY DATE_FORMAT(create_time, '%Y-%m-%d')
+                ORDER BY date
+            </when>
+            <when test="timeUnit == 'week'">
+                SELECT
+                    CONCAT(YEAR(create_time), '-', LPAD(WEEK(create_time, 1), 2, '0')) as date,
+                    SUM(pay_amount) as amount,
+                    COUNT(*) as order_count,
+                    COUNT(DISTINCT user_id) as user_count
+                FROM t_order
+                WHERE create_time BETWEEN #{startDate} AND #{endDate}
+                GROUP BY YEAR(create_time), WEEK(create_time, 1)
+                ORDER BY date
+            </when>
+            <when test="timeUnit == 'month'">
+                SELECT
+                    DATE_FORMAT(create_time, '%Y-%m') as date,
+                    SUM(pay_amount) as amount,
+                    COUNT(*) as order_count,
+                    COUNT(DISTINCT user_id) as user_count
+                FROM t_order
+                WHERE create_time BETWEEN #{startDate} AND #{endDate}
+                GROUP BY DATE_FORMAT(create_time, '%Y-%m')
+                ORDER BY date
+            </when>
+            <otherwise>
+                SELECT
+                    DATE_FORMAT(create_time, '%Y-%m-%d') as date,
+                    SUM(pay_amount) as amount,
+                    COUNT(*) as order_count,
+                    COUNT(DISTINCT user_id) as user_count
+                FROM t_order
+                WHERE create_time BETWEEN #{startDate} AND #{endDate}
+                GROUP BY DATE_FORMAT(create_time, '%Y-%m-%d')
+                ORDER BY date
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 查询套餐销售分布数据 -->
+    <select id="selectPackageDistribution" resultType="java.util.Map">
+        SELECT
+            p.name as name,
+            COUNT(o.id) as value
+        FROM t_order o
+        JOIN t_package p ON o.package_id = p.id
+        WHERE o.create_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY p.name
+        ORDER BY value DESC
+    </select>
+
+    <!-- 查询支付方式分布数据 -->
+    <select id="selectPayMethodDistribution" resultType="java.util.Map">
+        SELECT
+            payment_method as method,
+            COUNT(*) as value
+        FROM t_order
+        WHERE create_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY payment_method
         ORDER BY value DESC
     </select>
 </mapper>
