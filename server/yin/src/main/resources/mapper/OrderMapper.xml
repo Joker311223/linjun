@@ -128,7 +128,7 @@
     <!-- 插入订单日志 -->
     <insert id="insertLog" parameterType="com.yin.yin.model.OrderLog">
         INSERT INTO t_order_log (
-            order_id, operator_id, operator_name, action, content, create_time
+            order_id, operator_id, operator, action, content, create_time
         ) VALUES (
             #{orderId}, #{operatorId}, #{operatorName}, #{action}, #{content}, NOW()
         )

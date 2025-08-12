@@ -111,23 +111,26 @@ INSERT IGNORE INTO t_user (id, username, password, real_name, avatar, roles, ema
 
 -- 生成订单数据
 -- 使用存储过程生成大量订单数据
+DROP PROCEDURE IF EXISTS generate_orders;
 DELIMITER //
-CREATE PROCEDURE IF NOT EXISTS generate_orders(IN num_orders INT)
+CREATE PROCEDURE generate_orders(IN num_orders INT)
 BEGIN
     DECLARE i INT DEFAULT 0;
-    DECLARE order_id VARCHAR(20);
-    DECLARE user_id INT;
-    DECLARE package_id INT;
-    DECLARE price DOUBLE;
+    DECLARE order_id VARCHAR(64);
+    DECLARE user_id BIGINT(20);
+    DECLARE package_id BIGINT(20);
+    DECLARE price DECIMAL(10,2);
     DECLARE quantity INT;
-    DECLARE amount DOUBLE;
-    DECLARE discount DOUBLE;
-    DECLARE pay_amount DOUBLE;
+    DECLARE amount DECIMAL(10,2);
+    DECLARE discount DECIMAL(10,2);
+    DECLARE pay_amount DECIMAL(10,2);
     DECLARE payment_method_id INT;
     DECLARE payment_method_name VARCHAR(50);
     DECLARE source_id VARCHAR(20);
     DECLARE source_name VARCHAR(50);
-    DECLARE status_id INT;
+    DECLARE status_id TINYINT(1);
+    DECLARE status_name VARCHAR(20);
+    DECLARE status_color VARCHAR(20);
     DECLARE create_date DATETIME;
     DECLARE pay_date DATETIME;
     DECLARE complete_date DATETIME;
@@ -164,6 +167,7 @@ BEGIN
 
         -- 随机状态
         SET status_id = FLOOR(RAND() * 5);
+        SELECT name, color INTO status_name, status_color FROM t_order_status WHERE id = status_id;
 
         -- 随机日期（过去一年内）
         SET create_date = DATE_SUB(NOW(), INTERVAL FLOOR(RAND() * 365) DAY);
@@ -186,12 +190,12 @@ BEGIN
         INSERT INTO t_order (
             id, order_no, user_id, user_name, package_id, package_name, package_type,
             price, quantity, amount, discount, pay_amount, payment_method_id, payment_method,
-            source, source_id, status, remark, create_time, pay_time, complete_time
+            source, source_id, status, status_name, status_color, remark, create_time, pay_time, complete_time
         )
         SELECT
             order_id, CONCAT('NO', order_id), user_id, u.real_name, package_id, p.name, pt.name,
             price, quantity, amount, discount, pay_amount, payment_method_id, payment_method_name,
-            source_name, source_id, status_id, CONCAT('订单备注 ', i), create_date, pay_date, complete_date
+            source_name, source_id, status_id, status_name, status_color, CONCAT('订单备注 ', i), create_date, pay_date, complete_date
         FROM
             t_user u, t_package p, t_package_type pt
         WHERE
@@ -207,34 +211,34 @@ BEGIN
         WHERE id = user_id;
 
         -- 插入订单日志
-        INSERT INTO t_order_log (order_id, operator_id, operator_name, action, content, create_time)
+        INSERT INTO t_order_log (order_id, operator_id, operator, action, content, create_time)
         VALUES (order_id, user_id, (SELECT real_name FROM t_user WHERE id = user_id),
                 '创建订单', '用户创建了订单', create_date);
 
         -- 如果已支付，添加支付日志
         IF status_id > 0 THEN
-            INSERT INTO t_order_log (order_id, operator_id, operator_name, action, content, create_time)
+            INSERT INTO t_order_log (order_id, operator_id, operator, action, content, create_time)
             VALUES (order_id, user_id, (SELECT real_name FROM t_user WHERE id = user_id),
                     '支付订单', CONCAT('用户通过', payment_method_name, '支付了订单'), pay_date);
         END IF;
 
         -- 如果已取消，添加取消日志
         IF status_id = 2 THEN
-            INSERT INTO t_order_log (order_id, operator_id, operator_name, action, content, create_time)
+            INSERT INTO t_order_log (order_id, operator_id, operator, action, content, create_time)
             VALUES (order_id, user_id, (SELECT real_name FROM t_user WHERE id = user_id),
                     '取消订单', '用户取消了订单', DATE_ADD(create_date, INTERVAL FLOOR(RAND() * 24) HOUR));
         END IF;
 
         -- 如果已退款，添加退款日志
         IF status_id = 3 THEN
-            INSERT INTO t_order_log (order_id, operator_id, operator_name, action, content, create_time)
+            INSERT INTO t_order_log (order_id, operator_id, operator, action, content, create_time)
             VALUES (order_id, user_id, (SELECT real_name FROM t_user WHERE id = user_id),
                     '退款订单', '用户申请退款并已处理', DATE_ADD(pay_date, INTERVAL FLOOR(RAND() * 48) HOUR));
         END IF;
 
         -- 如果已完成，添加完成日志
         IF status_id = 4 THEN
-            INSERT INTO t_order_log (order_id, operator_id, operator_name, action, content, create_time)
+            INSERT INTO t_order_log (order_id, operator_id, operator, action, content, create_time)
             VALUES (order_id, user_id, (SELECT real_name FROM t_user WHERE id = user_id),
                     '完成订单', '订单已完成', complete_date);
         END IF;
@@ -246,9 +250,6 @@ DELIMITER ;
 
 -- 调用存储过程生成500个订单
 CALL generate_orders(500);
-
--- 删除存储过程
-DROP PROCEDURE IF EXISTS generate_orders;
 
 -- 更新套餐销售数量统计
 UPDATE t_package p
