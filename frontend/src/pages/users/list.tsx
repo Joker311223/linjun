@@ -78,7 +78,7 @@ const UserList: React.FC = () => {
 
         const response = await getUserList(params);
 
-        if (response.code === 200) {
+        if (response.data.code === 200) {
           setUsers(response.data.list);
           setTotal(response.data.total);
         }

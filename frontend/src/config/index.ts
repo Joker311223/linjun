@@ -5,7 +5,7 @@ const env = process.env.NODE_ENV || 'development';
 const config = {
   // 开发环境配置
   development: {
-    apiBaseUrl: 'http://localhost:8080', // 开发环境API地址
+    apiBaseUrl: 'http://localhost:9090', // 开发环境API地址
     mockEnabled: false, // 是否启用mock数据
   },
   // 测试环境配置

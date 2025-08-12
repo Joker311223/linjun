@@ -166,12 +166,12 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
           <Card>
             <Statistic
               title="总订单数"
-              value={data.overview.totalOrders}
+              value={data.overview?.totalOrders}
               valueStyle={{ color: '#1890ff' }}
               suffix={
-                <div style={{ fontSize: '14px', color: data.overview.growth >= 0 ? '#3f8600' : '#cf1322' }}>
-                  {data.overview.growth >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-                  {Math.abs(data.overview.growth)}%
+                <div style={{ fontSize: '14px', color: data.overview?.growth >= 0 ? '#3f8600' : '#cf1322' }}>
+                  {data.overview?.growth >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+                  {Math.abs(data.overview?.growth)}%
                 </div>
               }
             />
@@ -181,7 +181,7 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
           <Card>
             <Statistic
               title="总销售额"
-              value={data.overview.totalSales}
+              value={data.overview?.totalSales}
               precision={2}
               valueStyle={{ color: '#3f8600' }}
               prefix="¥"
@@ -192,7 +192,7 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
           <Card>
             <Statistic
               title="转化率"
-              value={data.overview.conversion}
+              value={data.overview?.conversion}
               precision={2}
               valueStyle={{ color: '#722ed1' }}
               suffix="%"
@@ -203,10 +203,10 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
           <Card>
             <Statistic
               title="环比增长"
-              value={data.overview.growth}
+              value={data.overview?.growth}
               precision={2}
-              valueStyle={{ color: data.overview.growth >= 0 ? '#3f8600' : '#cf1322' }}
-              prefix={data.overview.growth >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+              valueStyle={{ color: data.overview?.growth >= 0 ? '#3f8600' : '#cf1322' }}
+              prefix={data.overview?.growth >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
               suffix="%"
             />
           </Card>
@@ -217,7 +217,7 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
 
       <Title level={4}>热门产品</Title>
       <Row gutter={16}>
-        {data.topProducts.map((product) => (
+        {data.topProducts?.map?.((product) => (
           <Col xs={24} sm={12} md={8} key={product.id}>
             <Card size="small" title={product.name} style={{ marginBottom: 16 }}>
               <div style={{ marginBottom: 10 }}>
@@ -231,8 +231,8 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
                 </div>
               </div>
               <Progress
-                percent={product.growth}
-                status={product.growth >= 0 ? "success" : "exception"}
+                percent={product?.growth}
+                status={product?.growth >= 0 ? "success" : "exception"}
                 format={(percent) => `${percent}%`}
               />
             </Card>

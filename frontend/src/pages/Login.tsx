@@ -19,14 +19,14 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       const response = await login(values.username, values.password);
-      if (response.code === 200) {
+      if (response.data.code === 200) {
         // 登录成功
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('userInfo', JSON.stringify(response.data));
         message.success('登录成功');
         navigate('/');
       } else {
-        message.error(response.message || '登录失败');
+        message.error(response.data.message || '登录失败');
       }
     } catch (error) {
       message.error('登录失败，请稍后再试');

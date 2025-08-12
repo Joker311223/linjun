@@ -385,7 +385,7 @@ const OrderStatistics: React.FC = () => {
                   <Card>
                     <Statistic
                       title="总订单数"
-                      value={statisticsData.totalOrders}
+                      value={statisticsData?.totalOrders}
                       valueStyle={{ color: '#1890ff' }}
                       prefix={<ShoppingCartOutlined />}
                       suffix={
