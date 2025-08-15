@@ -78,9 +78,10 @@ const UserList: React.FC = () => {
 
         const response = await getUserList(params);
 
+        console.log('yjc=>response.data', response.data)
         if (response.data.code === 200) {
-          setUsers(response.data.list);
-          setTotal(response.data.total);
+          setUsers(response.data.data.list);
+          setTotal(response.data.data.total);
         }
       } catch (error) {
         console.error("获取用户列表失败:", error);
