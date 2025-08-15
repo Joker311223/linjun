@@ -10,12 +10,12 @@ const config = {
   },
   // 测试环境配置
   test: {
-    apiBaseUrl: 'http://test-api.example.com', // 测试环境API地址
+    apiBaseUrl: 'http://localhost:9090', // 测试环境API地址
     mockEnabled: false,
   },
   // 生产环境配置
   production: {
-    apiBaseUrl: 'https://api.example.com', // 生产环境API地址
+    apiBaseUrl: 'https://www.ttkjia.cn', // 生产环境API地址
     mockEnabled: false,
   }
 };
