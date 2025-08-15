@@ -166,7 +166,7 @@ const Dashboard: React.FC = () => {
   }
 
   const total = calculateTotal();
-
+  console.log('yjc=>data.overview.totalSales',data.overview )
   return (
     <div>
       <Title level={4}>数据概览</Title>

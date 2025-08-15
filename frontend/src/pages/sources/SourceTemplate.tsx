@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Tag, Statistic, Row, Col, DatePicker, Button, Space, Progress, Divider, Typography } from 'antd';
+import { Card, Table, Tag, Statistic, Row, Col, DatePicker, Button, Space, Progress, Divider, Typography, Avatar } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined, DownloadOutlined, ReloadOutlined } from '@ant-design/icons';
-import axios from 'axios';
+import { Line } from '@ant-design/charts';
 import dayjs from 'dayjs';
-import api from '../../services/api';
+import { getSourceById, exportSourceData } from '../../services/sourceService';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 interface SourcePageProps {
@@ -43,6 +43,12 @@ interface SourceData {
     statusColor: string;
     createTime: string;
   }[];
+  sourceInfo?: {
+    id: string;
+    name: string;
+    color: string;
+    icon: string;
+  };
 }
 
 const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => {
@@ -60,12 +66,12 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await api.get(`/api/sources/${sourceId}`, {
-        params: {
-          startDate: dateRange[0].format('YYYY-MM-DD'),
-          endDate: dateRange[1].format('YYYY-MM-DD')
-        }
-      });
+      const response = await getSourceById(
+        sourceId,
+        dateRange[0].format('YYYY-MM-DD'),
+        dateRange[1].format('YYYY-MM-DD')
+      );
+
       if (response.data.code === 200) {
         setData(response.data.data);
       }
@@ -86,9 +92,17 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
     fetchData();
   };
 
-  const handleExport = () => {
-    console.log(`导出${sourceName}数据`);
-    // 实际项目中应该调用后端接口导出数据
+  const handleExport = async () => {
+    try {
+      await exportSourceData(
+        sourceId,
+        dateRange[0].format('YYYY-MM-DD'),
+        dateRange[1].format('YYYY-MM-DD')
+      );
+      console.log(`导出${sourceName}数据成功`);
+    } catch (error) {
+      console.error(`导出${sourceName}数据失败:`, error);
+    }
   };
 
   // 获取订单状态标签
@@ -138,6 +152,32 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
     }
   ];
 
+  // 准备时间序列图表数据
+  const prepareChartData = () => {
+    if (!data || !data.timeData) return [];
+
+    const { dates, orders, sales } = data.timeData;
+    const chartData: any[] = [];
+
+    // 组装订单数据
+    dates.forEach((date, index) => {
+      chartData.push({
+        date,
+        value: orders[index],
+        category: '订单数'
+      });
+
+      // 组装销售额数据 (除以100使其与订单数在同一数量级)
+      chartData.push({
+        date,
+        value: sales[index] / 100,
+        category: '销售额(百元)'
+      });
+    });
+
+    return chartData;
+  };
+
   if (loading || !data) {
     return (
       <Card loading={loading}>
@@ -149,7 +189,20 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
   return (
     <div>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Title level={4}>{sourceName}订单数据</Title>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {data.sourceInfo && (
+            <Avatar
+              style={{
+                backgroundColor: data.sourceInfo.color || '#1890ff',
+                marginRight: 12
+              }}
+              size="large"
+            >
+              {data.sourceInfo.name.charAt(0)}
+            </Avatar>
+          )}
+          <Title level={4} style={{ margin: 0 }}>{sourceName}订单数据</Title>
+        </div>
         <Space>
           <RangePicker
             value={dateRange}
@@ -215,6 +268,32 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
 
       <Divider />
 
+      {/* 添加时间序列图表 */}
+      <Card title="订单趋势" style={{ marginBottom: 24 }}>
+        <Line
+          data={prepareChartData()}
+          xField="date"
+          yField="value"
+          seriesField="category"
+          smooth
+          animation={{
+            appear: {
+              animation: 'path-in',
+              duration: 1000,
+            },
+          }}
+          point={{
+            size: 3,
+            shape: 'circle',
+          }}
+          legend={{
+            position: 'top-right',
+          }}
+        />
+      </Card>
+
+      <Divider />
+
       <Title level={4}>热门产品</Title>
       <Row gutter={16}>
         {data.topProducts?.map?.((product) => (
@@ -228,6 +307,13 @@ const SourceTemplate: React.FC<SourcePageProps> = ({ sourceName, sourceId }) => 
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>订单量:</span>
                   <span>{product.orders}单</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>增长率:</span>
+                  <span style={{ color: product.growth >= 0 ? '#3f8600' : '#cf1322' }}>
+                    {product.growth >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+                    {product.growth}%
+                  </span>
                 </div>
               </div>
               <Progress
