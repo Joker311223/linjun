@@ -201,10 +201,10 @@
     <!-- 查询仪表盘概览数据 -->
     <select id="selectDashboardOverview" resultType="java.util.Map">
         SELECT
-            IFNULL(SUM(pay_amount), 0) as total_sales,
-            COUNT(*) as total_orders,
-            (SELECT COUNT(*) FROM t_user) as total_users,
-            (SELECT COUNT(*) FROM t_package) as total_packages
+            IFNULL(SUM(pay_amount), 0) as totalSales,
+            COUNT(*) as totalOrders,
+            (SELECT COUNT(*) FROM t_user) as totalUsers,
+            (SELECT COUNT(*) FROM t_package) as totalPackages
         FROM t_order
     </select>
 
@@ -357,5 +357,66 @@
         WHERE create_time BETWEEN #{startDate} AND #{endDate}
         GROUP BY payment_method
         ORDER BY value DESC
+    </select>
+
+    <!-- 查询来源统计数据 -->
+    <select id="selectSourceStats" resultType="java.util.Map">
+        SELECT
+            COUNT(*) as totalOrders,
+            IFNULL(SUM(pay_amount), 0) as totalSales,
+            COUNT(DISTINCT user_id) as totalUsers,
+            100 as visits
+        FROM t_order
+        WHERE source_id = #{sourceId}
+        AND create_time BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+    <!-- 查询来源时间序列数据 -->
+    <select id="selectSourceTimeSeriesData" resultType="java.util.Map">
+        SELECT
+            DATE_FORMAT(create_time, '%m/%d') as date,
+            COUNT(*) as orders,
+            IFNULL(SUM(pay_amount), 0) as sales
+        FROM t_order
+        WHERE source_id = #{sourceId}
+        AND create_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY DATE_FORMAT(create_time, '%m/%d')
+        ORDER BY create_time
+    </select>
+
+    <!-- 查询来源热门产品 -->
+    <select id="selectSourceTopProducts" resultType="java.util.Map">
+        SELECT
+            p.id as id,
+            p.name as name,
+            COUNT(o.id) as orders,
+            IFNULL(SUM(o.pay_amount), 0) as sales,
+            (
+                SELECT IFNULL(SUM(o2.pay_amount), 0)
+                FROM t_order o2
+                JOIN t_package p2 ON o2.package_id = p2.id
+                WHERE o2.source_id = #{sourceId}
+                AND p2.id = p.id
+                AND o2.create_time BETWEEN DATE_SUB(#{startDate}, INTERVAL 30 DAY) AND DATE_SUB(#{endDate}, INTERVAL 30 DAY)
+            ) as prevSales
+        FROM t_order o
+        JOIN t_package p ON o.package_id = p.id
+        WHERE o.source_id = #{sourceId}
+        AND o.create_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY p.id, p.name
+        ORDER BY sales DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询来源最近订单 -->
+    <select id="selectRecentOrdersBySource" resultMap="BaseResultMap">
+        SELECT o.*,
+            s.name as statusName,
+            s.color as statusColor
+        FROM t_order o
+        JOIN t_order_status s ON o.status = s.id
+        WHERE o.source_id = #{sourceId}
+        ORDER BY o.create_time DESC
+        LIMIT #{limit}
     </select>
 </mapper>

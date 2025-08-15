@@ -136,4 +136,32 @@ public interface OrderMapper {
      * 查询订单来源分布
      */
     List<Map<String, Object>> selectOrderSourceDistribution();
+
+    /**
+     * 查询来源统计数据
+     */
+    Map<String, Object> selectSourceStats(@Param("sourceId") String sourceId,
+                                         @Param("startDate") String startDate,
+                                         @Param("endDate") String endDate);
+
+    /**
+     * 查询来源时间序列数据
+     */
+    List<Map<String, Object>> selectSourceTimeSeriesData(@Param("sourceId") String sourceId,
+                                                       @Param("startDate") String startDate,
+                                                       @Param("endDate") String endDate);
+
+    /**
+     * 查询来源热门产品
+     */
+    List<Map<String, Object>> selectSourceTopProducts(@Param("sourceId") String sourceId,
+                                                    @Param("startDate") String startDate,
+                                                    @Param("endDate") String endDate,
+                                                    @Param("limit") Integer limit);
+
+    /**
+     * 查询来源最近订单
+     */
+    List<Order> selectRecentOrdersBySource(@Param("sourceId") String sourceId,
+                                          @Param("limit") Integer limit);
 }
