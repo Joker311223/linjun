@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yin.yin.mapper.LoginLogMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.yin.yin.model.LoginLog">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="username" property="username" />
+        <result column="ip_address" property="ipAddress" />
+        <result column="location" property="location" />
+        <result column="browser" property="browser" />
+        <result column="os" property="os" />
+        <result column="status" property="status" />
+        <result column="fail_reason" property="failReason" />
+        <result column="login_time" property="loginTime" />
+    </resultMap>
+
+    <!-- 插入登录日志 -->
+    <insert id="insert" parameterType="com.yin.yin.model.LoginLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_login_log (
+            user_id, username, ip_address, location, browser, os, status, fail_reason, login_time
+        ) VALUES (
+            #{userId}, #{username}, #{ipAddress}, #{location}, #{browser}, #{os}, #{status}, #{failReason}, #{loginTime}
+        )
+    </insert>
+
+    <!-- 根据ID查询登录日志 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * from t_login_log WHERE id = #{id}
+    </select>
+
+    <!-- 查询登录日志列表 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * from t_login_log
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                AND login_time BETWEEN #{startDate} AND #{endDate}
+            </if>
+        </where>
+        ORDER BY login_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <!-- 查询登录日志总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) from t_login_log
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                AND login_time BETWEEN #{startDate} AND #{endDate}
+            </if>
+        </where>
+    </select>
+</mapper>

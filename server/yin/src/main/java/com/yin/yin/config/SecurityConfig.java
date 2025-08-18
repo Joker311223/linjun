@@ -22,10 +22,10 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/**").permitAll()
+                .requestMatchers("/**").permitAll()  // 允许所有请求
                 .anyRequest().authenticated()
             )
-            .httpBasic();
+            .httpBasic().disable();  // 禁用HTTP Basic认证
 
         return http.build();
     }

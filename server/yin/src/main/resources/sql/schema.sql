@@ -28,6 +28,24 @@ CREATE TABLE IF NOT EXISTS `t_user` (
   UNIQUE KEY `uk_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
+-- 登录日志表
+CREATE TABLE IF NOT EXISTS `t_login_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+  `user_id` bigint(20) DEFAULT NULL COMMENT '用户ID',
+  `username` varchar(50) NOT NULL COMMENT '用户名',
+  `ip_address` varchar(50) DEFAULT NULL COMMENT 'IP地址',
+  `location` varchar(255) DEFAULT NULL COMMENT '登录地点',
+  `browser` varchar(50) DEFAULT NULL COMMENT '浏览器类型',
+  `os` varchar(50) DEFAULT NULL COMMENT '操作系统',
+  `status` tinyint(1) DEFAULT NULL COMMENT '登录状态：0-失败，1-成功',
+  `fail_reason` varchar(255) DEFAULT NULL COMMENT '失败原因',
+  `login_time` datetime DEFAULT NULL COMMENT '登录时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_username` (`username`),
+  KEY `idx_login_time` (`login_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录日志表';
+
 -- 套餐类型表
 CREATE TABLE IF NOT EXISTS `t_package_type` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '类型ID',

@@ -79,7 +79,10 @@ public class UserController {
      * 获取用户统计数据
      */
     @GetMapping("/users/statistics")
-    public Result<?> getUserStatistics() {
+    public Result<?> getUserStatistics(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(defaultValue = "day") String timeUnit) {
         Object statistics = userService.getUserStatistics();
         return Result.success(statistics);
     }

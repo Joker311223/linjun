@@ -1,7 +1,9 @@
 package com.yin.yin.service.impl;
 
 import com.yin.yin.common.PageResult;
+import com.yin.yin.mapper.LoginLogMapper;
 import com.yin.yin.mapper.UserMapper;
+import com.yin.yin.model.LoginLog;
 import com.yin.yin.model.User;
 import com.yin.yin.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,16 +22,46 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private LoginLogMapper loginLogMapper;
+
     @Override
     public User login(String username, String password) {
         User user = userMapper.selectByUsername(username);
+
+        // 创建登录日志对象
+        LoginLog loginLog = new LoginLog();
+        loginLog.setUsername(username);
+        loginLog.setLoginTime(new Date());
+        // 这些字段在实际环境中应该从请求中获取
+        loginLog.setIpAddress("127.0.0.1");
+        loginLog.setLocation("未知");
+        loginLog.setBrowser("未知");
+        loginLog.setOs("未知");
+
         if (user != null && password.equals(user.getPassword())) {
+            // 登录成功
+            loginLog.setUserId(user.getId());
+            loginLog.setStatus(1); // 成功
+
             // 更新最后登录时间
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             userMapper.updateLastLoginTime(user.getId(), sdf.format(new Date()));
+
+            // 保存登录日志
+            loginLogMapper.insert(loginLog);
+
             return user;
+        } else {
+            // 登录失败
+            loginLog.setStatus(0); // 失败
+            loginLog.setFailReason(user == null ? "用户不存在" : "密码错误");
+
+            // 保存登录日志
+            loginLogMapper.insert(loginLog);
+
+            return null;
         }
-        return null;
     }
 
     @Override
