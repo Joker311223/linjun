@@ -67,10 +67,10 @@ const UserStatistics: React.FC = () => {
           endDate: dateRange[1].format('YYYY-MM-DD'),
           timeUnit
         };
-
         const response = await api.get('/api/users/statistics', { params });
 
         if (response.data.code === 200) {
+          console.log('yjc=>response.data', response.data)
           setStatisticsData(response.data.data);
         }
       } catch (error) {

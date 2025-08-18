@@ -44,7 +44,7 @@ api.interceptors.response.use(
         // 401: 未登录或token过期
         // 清除token并跳转登录页
         localStorage.removeItem('token');
-        window.location.href = '/login';
+        // window.location.href = '/login';
       }
     }
     return Promise.reject(error);
