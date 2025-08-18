@@ -3,32 +3,6 @@ import { generateFutureDateTime, generateFutureDate, generateDateAfter, formatDa
 
 const Random = Mock.Random;
 
-// 登录接口
-Mock.mock('/api/user/login', 'post', (options: any) => {
-  const body = JSON.parse(options.body);
-  if (body.username === 'admin' && body.password === 'admin123') {
-    return {
-      code: 200,
-      message: '登录成功',
-      data: {
-        token: Random.guid(),
-        userId: '1',
-        username: 'admin',
-        realName: '管理员',
-        avatar: Random.image('100x100', '#4A7BF7', 'Avatar'),
-        roles: ['admin'],
-        permissions: ['*:*:*']
-      }
-    };
-  } else {
-    return {
-      code: 400,
-      message: '用户名或密码错误',
-      data: null
-    };
-  }
-});
-
 // 获取用户信息
 Mock.mock('/api/user/info', 'get', () => {
   return {

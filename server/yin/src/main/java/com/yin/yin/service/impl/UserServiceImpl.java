@@ -19,11 +19,22 @@ import java.util.*;
 @Service
 public class UserServiceImpl implements UserService {
 
+    // 最大登录失败次数
+    private static final int MAX_LOGIN_FAIL_COUNT = 5;
+
+    // 锁定时间（分钟）
+    private static final int LOCK_TIME_MINUTES = 10;
+
     @Autowired
     private UserMapper userMapper;
 
     @Autowired
     private LoginLogMapper loginLogMapper;
+
+    @Override
+    public User getUserByUsername(String username) {
+        return userMapper.selectByUsername(username);
+    }
 
     @Override
     public User login(String username, String password) {
@@ -39,7 +50,27 @@ public class UserServiceImpl implements UserService {
         loginLog.setBrowser("未知");
         loginLog.setOs("未知");
 
-        if (user != null && password.equals(user.getPassword())) {
+        // 用户不存在
+        if (user == null) {
+            loginLog.setStatus(0); // 失败
+            loginLog.setFailReason("用户不存在");
+            loginLogMapper.insert(loginLog);
+            return null;
+        }
+
+        // 检查账户是否被锁定
+        if (isAccountLocked(user)) {
+            loginLog.setUserId(user.getId());
+            loginLog.setStatus(0); // 失败
+            loginLog.setFailReason("账户已锁定");
+            loginLogMapper.insert(loginLog);
+            return null;
+        }
+
+        if (password.equals(user.getPassword())) {
+            // 登录成功，重置失败计数
+            resetLoginFailCount(user);
+
             // 登录成功
             loginLog.setUserId(user.getId());
             loginLog.setStatus(1); // 成功
@@ -53,15 +84,58 @@ public class UserServiceImpl implements UserService {
 
             return user;
         } else {
+            // 登录失败，处理失败计数
+            handleLoginFailure(user);
+
             // 登录失败
+            loginLog.setUserId(user.getId());
             loginLog.setStatus(0); // 失败
-            loginLog.setFailReason(user == null ? "用户不存在" : "密码错误");
+            loginLog.setFailReason("密码错误");
 
             // 保存登录日志
             loginLogMapper.insert(loginLog);
 
             return null;
         }
+    }
+
+    @Override
+    public boolean isAccountLocked(User user) {
+        // 如果没有锁定时间，则账户未锁定
+        if (user.getLockTime() == null) {
+            return false;
+        }
+
+        // 检查锁定时间是否已过期
+        Date now = new Date();
+        return now.before(user.getLockTime());
+    }
+
+    @Override
+    public void handleLoginFailure(User user) {
+        // 增加登录失败次数
+        userMapper.incrementLoginFailCount(user.getId());
+
+        // 重新获取用户信息，确保获取最新的失败次数
+        user = userMapper.selectById(user.getId());
+
+        // 如果失败次数达到阈值，锁定账户
+        if (user.getLoginFailCount() != null && user.getLoginFailCount() >= MAX_LOGIN_FAIL_COUNT) {
+            // 计算锁定截止时间
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.MINUTE, LOCK_TIME_MINUTES);
+            Date lockTime = calendar.getTime();
+
+            // 设置锁定时间
+            userMapper.setLockTime(user.getId(), lockTime);
+        }
+    }
+
+    @Override
+    public void resetLoginFailCount(User user) {
+        userMapper.resetLoginFailCount(user.getId());
+        // 清除锁定时间
+        userMapper.setLockTime(user.getId(), null);
     }
 
     @Override

@@ -86,10 +86,6 @@ const Login: React.FC = () => {
               登录
             </Button>
           </Form.Item>
-
-          <div style={{ textAlign: 'center' }}>
-            {/* <p>用户名: admin / 密码: admin123</p> */}
-          </div>
         </Form>
       </Card>
     </div>

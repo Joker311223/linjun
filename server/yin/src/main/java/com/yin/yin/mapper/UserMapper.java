@@ -4,6 +4,7 @@ import com.yin.yin.model.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -58,4 +59,19 @@ public interface UserMapper {
      * 更新用户最后登录时间
      */
     int updateLastLoginTime(@Param("id") Long id, @Param("lastLoginTime") String lastLoginTime);
+
+    /**
+     * 增加登录失败次数
+     */
+    int incrementLoginFailCount(@Param("id") Long id);
+
+    /**
+     * 重置登录失败次数
+     */
+    int resetLoginFailCount(@Param("id") Long id);
+
+    /**
+     * 设置账户锁定时间
+     */
+    int setLockTime(@Param("id") Long id, @Param("lockTime") Date lockTime);
 }

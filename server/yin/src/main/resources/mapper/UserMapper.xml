@@ -18,6 +18,8 @@
         <result column="position" property="position" />
         <result column="register_time" property="registerTime" />
         <result column="last_login_time" property="lastLoginTime" />
+        <result column="login_fail_count" property="loginFailCount" />
+        <result column="lock_time" property="lockTime" />
         <result column="create_time" property="createTime" />
         <result column="update_time" property="updateTime" />
     </resultMap>
@@ -115,5 +117,20 @@
     <!-- 更新用户最后登录时间 -->
     <update id="updateLastLoginTime">
         UPDATE t_user SET last_login_time = #{lastLoginTime}, update_time = NOW() WHERE id = #{id}
+    </update>
+
+    <!-- 增加登录失败次数 -->
+    <update id="incrementLoginFailCount">
+        UPDATE t_user SET login_fail_count = IFNULL(login_fail_count, 0) + 1, update_time = NOW() WHERE id = #{id}
+    </update>
+
+    <!-- 重置登录失败次数 -->
+    <update id="resetLoginFailCount">
+        UPDATE t_user SET login_fail_count = 0, update_time = NOW() WHERE id = #{id}
+    </update>
+
+    <!-- 设置账户锁定时间 -->
+    <update id="setLockTime">
+        UPDATE t_user SET lock_time = #{lockTime}, update_time = NOW() WHERE id = #{id}
     </update>
 </mapper>

@@ -7,6 +7,8 @@ import com.yin.yin.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +30,21 @@ public class UserController {
         String username = loginParams.get("username");
         String password = loginParams.get("password");
 
-        User user = userService.login(username, password);
+        // 先查询用户是否存在
+        User user = userService.getUserByUsername(username);
+        if (user == null) {
+            return Result.failed("用户名或密码错误");
+        }
+
+        // 检查账户是否被锁定
+        if (userService.isAccountLocked(user)) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String unlockTimeStr = sdf.format(user.getLockTime());
+            return Result.failed("账户已被锁定，将在 " + unlockTimeStr + " 后解锁，请稍后再试");
+        }
+
+        // 尝试登录
+        user = userService.login(username, password);
         if (user != null) {
             Map<String, Object> data = new HashMap<>();
             data.put("token", java.util.UUID.randomUUID().toString());
@@ -41,7 +57,15 @@ public class UserController {
 
             return Result.success(data, "登录成功");
         } else {
-            return Result.failed("用户名或密码错误");
+            // 重新获取用户信息，以获取最新的失败次数
+            user = userService.getUserByUsername(username);
+            int remainingAttempts = 5 - (user.getLoginFailCount() != null ? user.getLoginFailCount() : 0);
+
+            if (remainingAttempts <= 0) {
+                return Result.failed("用户名或密码错误，账户已被锁定，请10分钟后再试");
+            } else {
+                return Result.failed("用户名或密码错误，还剩 " + remainingAttempts + " 次尝试机会，连续5次失败将锁定账户10分钟");
+            }
         }
     }
 
@@ -79,7 +103,16 @@ public class UserController {
      * 获取用户统计数据
      */
     @GetMapping("/users/statistics")
-    public Result<?> getUserStatistics(
+    public Result<?> getUserStatistics() {
+        Object statistics = userService.getUserStatistics();
+        return Result.success(statistics);
+    }
+
+    /**
+     * 获取用户统计数据（带时间参数）
+     */
+    @GetMapping("/users/statistics/time")
+    public Result<?> getUserStatisticsByTime(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(defaultValue = "day") String timeUnit) {

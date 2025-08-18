@@ -18,6 +18,11 @@ public interface UserService {
     User getUserInfo(Long userId);
 
     /**
+     * 根据用户名获取用户
+     */
+    User getUserByUsername(String username);
+
+    /**
      * 分页查询用户列表
      */
     PageResult<User> listUsers(String keyword, Integer status, String startDate, String endDate, Integer pageNum, Integer pageSize);
@@ -41,4 +46,19 @@ public interface UserService {
      * 删除用户
      */
     int deleteUser(Long id);
+
+    /**
+     * 检查账户是否被锁定
+     */
+    boolean isAccountLocked(User user);
+
+    /**
+     * 处理登录失败
+     */
+    void handleLoginFailure(User user);
+
+    /**
+     * 重置登录失败计数
+     */
+    void resetLoginFailCount(User user);
 }

@@ -95,6 +95,16 @@ public class User {
     private Date lastLoginTime;
 
     /**
+     * 登录失败次数
+     */
+    private Integer loginFailCount;
+
+    /**
+     * 账户锁定时间
+     */
+    private Date lockTime;
+
+    /**
      * 创建时间
      */
     private Date createTime;
@@ -103,4 +113,18 @@ public class User {
      * 更新时间
      */
     private Date updateTime;
+
+    /**
+     * 获取账户锁定时间
+     */
+    public Date getLockTime() {
+        return lockTime;
+    }
+
+    /**
+     * 获取登录失败次数
+     */
+    public Integer getLoginFailCount() {
+        return loginFailCount;
+    }
 }
