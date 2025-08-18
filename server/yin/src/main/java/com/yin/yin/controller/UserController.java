@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * 用户控制器
@@ -19,8 +20,79 @@ import java.util.Map;
 @RequestMapping("/api/user")
 public class UserController {
 
+    // 邀请码常量
+    private static final String INVITE_CODE = "admin123";
+
+    // 密码正则表达式：至少8位，包含字母、数字和特殊字符
+    private static final Pattern PASSWORD_PATTERN =
+        Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$");
+
     @Autowired
     private UserService userService;
+
+    /**
+     * 用户注册
+     */
+    @PostMapping("/register")
+    public Result<?> register(@RequestBody Map<String, String> registerParams) {
+        String username = registerParams.get("username");
+        String password = registerParams.get("password");
+        String confirmPassword = registerParams.get("confirmPassword");
+        String phone = registerParams.get("phone");
+        String inviteCode = registerParams.get("inviteCode");
+        String email = registerParams.get("email");
+
+        // 参数校验
+        if (username == null || username.trim().isEmpty()) {
+            return Result.failed("用户名不能为空");
+        }
+
+        if (password == null || password.trim().isEmpty()) {
+            return Result.failed("密码不能为空");
+        }
+
+        if (!password.equals(confirmPassword)) {
+            return Result.failed("两次输入的密码不一致");
+        }
+
+        if (phone == null || !phone.matches("^1[3-9]\\d{9}$")) {
+            return Result.failed("请输入有效的手机号码");
+        }
+
+        if (inviteCode == null || !INVITE_CODE.equals(inviteCode)) {
+            return Result.failed("邀请码无效");
+        }
+
+        // 密码强度校验
+        if (!PASSWORD_PATTERN.matcher(password).matches()) {
+            return Result.failed("密码必须包含字母、数字和特殊字符，且长度至少为8位");
+        }
+
+        // 检查用户名是否已存在
+        User existingUser = userService.getUserByUsername(username);
+        if (existingUser != null) {
+            return Result.failed("用户名已存在");
+        }
+
+        // 创建用户对象
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(password); // 实际应用中应该对密码进行加密
+        user.setPhone(phone);
+        user.setEmail(email);
+        user.setStatus(1); // 默认启用
+        user.setRegisterTime(new Date());
+        user.setCreateTime(new Date());
+        user.setUpdateTime(new Date());
+
+        // 保存用户
+        int result = userService.addUser(user);
+        if (result > 0) {
+            return Result.success(null, "注册成功");
+        } else {
+            return Result.failed("注册失败，请稍后再试");
+        }
+    }
 
     /**
      * 用户登录
