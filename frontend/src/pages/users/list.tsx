@@ -11,20 +11,28 @@ import {
   Badge,
   Avatar,
   Tooltip,
+  Modal,
+  message,
 } from "antd";
 import {
   EyeOutlined,
   SearchOutlined,
   UserOutlined,
   DownloadOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-import { getUserList } from "../../services/userService";
+import { getUserList, deleteUser, changeUserStatus } from "../../services/userService";
+import AuthButton from "../../components/AuthButton";
 
 const { Search } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+const { confirm } = Modal;
 
 interface User {
   id: number;
@@ -34,6 +42,8 @@ interface User {
   phone: string;
   status: number;
   roles: string;
+  department: string;
+  position: string;
   registerTime: string;
   lastLoginTime: string | null;
   source: string;
@@ -121,10 +131,78 @@ const UserList: React.FC = () => {
     navigate(`/users/detail/${id}`);
   };
 
+  // 处理编辑用户
+  const handleEdit = (id: number) => {
+    navigate(`/users/edit/${id}`);
+  };
+
+  // 处理删除用户
+  const handleDelete = (id: number, username: string) => {
+    confirm({
+      title: '确定要删除该用户吗?',
+      icon: <ExclamationCircleOutlined />,
+      content: `用户名: ${username}`,
+      okText: '确定',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          const response = await deleteUser(id);
+          if (response.data.code === 200) {
+            message.success('删除用户成功');
+            // 重新加载数据
+            const newPageNum = users.length === 1 && pageNum > 1 ? pageNum - 1 : pageNum;
+            setPageNum(newPageNum);
+          } else {
+            message.error(response.data.message || '删除用户失败');
+          }
+        } catch (error) {
+          console.error('删除用户失败:', error);
+          message.error('删除用户失败');
+        }
+      },
+    });
+  };
+
+  // 处理修改用户状态
+  const handleChangeStatus = (id: number, status: number) => {
+    const newStatus = status === 1 ? 0 : 1;
+    const statusText = newStatus === 1 ? '启用' : '禁用';
+
+    confirm({
+      title: `确定要${statusText}该用户吗?`,
+      icon: <ExclamationCircleOutlined />,
+      okText: '确定',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          const response = await changeUserStatus(id, newStatus);
+          if (response.data.code === 200) {
+            message.success(`${statusText}用户成功`);
+            // 更新本地数据
+            setUsers(users.map(user =>
+              user.id === id ? { ...user, status: newStatus } : user
+            ));
+          } else {
+            message.error(response.data.message || `${statusText}用户失败`);
+          }
+        } catch (error) {
+          console.error(`${statusText}用户失败:`, error);
+          message.error(`${statusText}用户失败`);
+        }
+      },
+    });
+  };
+
   // 导出用户数据
   const handleExport = () => {
     // 实际项目中应该调用后端接口导出数据
     console.log("导出用户数据");
+  };
+
+  // 创建用户
+  const handleCreate = () => {
+    navigate('/users/create');
   };
 
   // 获取用户状态标签
@@ -133,7 +211,7 @@ const UserList: React.FC = () => {
       case 1:
         return <Tag color="success">正常</Tag>;
       case 0:
-        return <Tag color="default">未激活</Tag>;
+        return <Tag color="default">禁用</Tag>;
       default:
         return <Tag color="default">未知</Tag>;
     }
@@ -141,14 +219,23 @@ const UserList: React.FC = () => {
 
   // 获取用户角色标签
   const getRoleTags = (roles: string) => {
-    let color = "default";
-    if (roles === "admin") color = "red";
-    else if (roles === "editor") color = "blue";
+    if (!roles) return <Tag color="default">无角色</Tag>;
+
+    const roleList = roles.split(',');
     return (
       <Space>
-        <Tag key={roles} color={color}>
-          {roles}
-        </Tag>
+        {roleList.map(role => {
+          let color = 'default';
+          if (role === 'admin') color = 'red';
+          else if (role === 'user') color = 'blue';
+          else if (role === 'visitor') color = 'green';
+
+          return (
+            <Tag key={role} color={color}>
+              {role}
+            </Tag>
+          );
+        })}
       </Space>
     );
   };
@@ -187,10 +274,15 @@ const UserList: React.FC = () => {
       ),
     },
     {
-      title: "来源",
-      dataIndex: "source",
-      key: "source",
-      width: 100,
+      title: "部门/职位",
+      key: "department",
+      width: 150,
+      render: (record: User) => (
+        <div>
+          <div>{record.department || '-'}</div>
+          <div style={{ fontSize: 12, color: "#999" }}>{record.position || '-'}</div>
+        </div>
+      ),
     },
     {
       title: "状态",
@@ -210,7 +302,7 @@ const UserList: React.FC = () => {
       dataIndex: "registerTime",
       key: "registerTime",
       width: 180,
-      render: (text: string) => dayjs(text).format("YYYY-MM-DD HH:mm:ss"),
+      render: (text: string) => text ? dayjs(text).format("YYYY-MM-DD HH:mm:ss") : "-",
     },
     {
       title: "最后登录",
@@ -223,13 +315,44 @@ const UserList: React.FC = () => {
     {
       title: "操作",
       key: "action",
-      width: 100,
+      width: 200,
       render: (record: User) => (
-        <Button
-          type="text"
-          icon={<EyeOutlined />}
-          onClick={() => handleView(record.id)}
-        />
+        <Space>
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record.id)}
+          >
+            查看
+          </Button>
+          <AuthButton
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record.id)}
+            permissionCode="users:edit"
+          >
+            编辑
+          </AuthButton>
+          <AuthButton
+            type="text"
+            danger
+            icon={record.status === 1 ? <DeleteOutlined /> : <UserOutlined />}
+            onClick={() => handleChangeStatus(record.id, record.status)}
+            permissionCode="users:edit"
+          >
+            {record.status === 1 ? '禁用' : '启用'}
+          </AuthButton>
+          <AuthButton
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id, record.username)}
+            permissionCode="users:delete"
+            disabled={record.username === 'admin'} // 禁止删除管理员账号
+          >
+            删除
+          </AuthButton>
+        </Space>
       ),
     },
   ];
@@ -252,12 +375,20 @@ const UserList: React.FC = () => {
             onChange={handleStatusChange}
           >
             <Option value="1">正常</Option>
-            <Option value="0">未激活</Option>
+            <Option value="0">禁用</Option>
           </Select>
           <RangePicker
             placeholder={["注册开始日期", "注册结束日期"]}
             onChange={handleDateRangeChange}
           />
+          <AuthButton
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreate}
+            permissionCode="users:create"
+          >
+            创建用户
+          </AuthButton>
           <Button icon={<DownloadOutlined />} onClick={handleExport}>
             导出数据
           </Button>
@@ -277,6 +408,7 @@ const UserList: React.FC = () => {
         }}
         onChange={handleTableChange}
         loading={loading}
+        scroll={{ x: 1300 }}
       />
     </Card>
   );

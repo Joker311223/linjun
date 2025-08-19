@@ -1,16 +1,14 @@
 package com.yin.yin.service.impl;
 
 import com.yin.yin.common.PageResult;
-import com.yin.yin.mapper.LoginLogMapper;
 import com.yin.yin.mapper.UserMapper;
-import com.yin.yin.model.LoginLog;
+import com.yin.yin.mapper.UserRoleMapper;
 import com.yin.yin.model.User;
 import com.yin.yin.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -19,17 +17,11 @@ import java.util.*;
 @Service
 public class UserServiceImpl implements UserService {
 
-    // 最大登录失败次数
-    private static final int MAX_LOGIN_FAIL_COUNT = 5;
-
-    // 锁定时间（分钟）
-    private static final int LOCK_TIME_MINUTES = 10;
-
     @Autowired
     private UserMapper userMapper;
 
     @Autowired
-    private LoginLogMapper loginLogMapper;
+    private UserRoleMapper userRoleMapper;
 
     @Override
     public User getUserByUsername(String username) {
@@ -39,118 +31,40 @@ public class UserServiceImpl implements UserService {
     @Override
     public User login(String username, String password) {
         User user = userMapper.selectByUsername(username);
-
-        // 创建登录日志对象
-        LoginLog loginLog = new LoginLog();
-        loginLog.setUsername(username);
-        loginLog.setLoginTime(new Date());
-        // 这些字段在实际环境中应该从请求中获取
-        loginLog.setIpAddress("127.0.0.1");
-        loginLog.setLocation("未知");
-        loginLog.setBrowser("未知");
-        loginLog.setOs("未知");
-
-        // 用户不存在
-        if (user == null) {
-            loginLog.setStatus(0); // 失败
-            loginLog.setFailReason("用户不存在");
-            loginLogMapper.insert(loginLog);
-            return null;
-        }
-
-        // 检查账户是否被锁定
-        if (isAccountLocked(user)) {
-            loginLog.setUserId(user.getId());
-            loginLog.setStatus(0); // 失败
-            loginLog.setFailReason("账户已锁定");
-            loginLogMapper.insert(loginLog);
-            return null;
-        }
-
-        if (password.equals(user.getPassword())) {
-            // 登录成功，重置失败计数
+        if (user != null && password.equals(user.getPassword())) {
+            // 登录成功，重置登录失败计数
             resetLoginFailCount(user);
-
-            // 登录成功
-            loginLog.setUserId(user.getId());
-            loginLog.setStatus(1); // 成功
-
             // 更新最后登录时间
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            userMapper.updateLastLoginTime(user.getId(), sdf.format(new Date()));
-
-            // 保存登录日志
-            loginLogMapper.insert(loginLog);
-
+            updateLastLoginTime(user.getId());
             return user;
-        } else {
-            // 登录失败，处理失败计数
+        } else if (user != null) {
+            // 登录失败，增加失败计数
             handleLoginFailure(user);
-
-            // 登录失败
-            loginLog.setUserId(user.getId());
-            loginLog.setStatus(0); // 失败
-            loginLog.setFailReason("密码错误");
-
-            // 保存登录日志
-            loginLogMapper.insert(loginLog);
-
-            return null;
         }
+        return null;
     }
 
     @Override
     public boolean isAccountLocked(User user) {
-        // 如果没有锁定时间，则账户未锁定
-        if (user.getLockTime() == null) {
-            return false;
+        if (user.getLockTime() != null) {
+            // 检查锁定时间是否已过
+            return user.getLockTime().after(new Date());
         }
-
-        // 检查锁定时间是否已过期
-        Date now = new Date();
-        return now.before(user.getLockTime());
+        return false;
     }
 
     @Override
-    public void handleLoginFailure(User user) {
-        // 增加登录失败次数
-        userMapper.incrementLoginFailCount(user.getId());
-
-        // 重新获取用户信息，确保获取最新的失败次数
-        user = userMapper.selectById(user.getId());
-
-        // 如果失败次数达到阈值，锁定账户
-        if (user.getLoginFailCount() != null && user.getLoginFailCount() >= MAX_LOGIN_FAIL_COUNT) {
-            // 计算锁定截止时间
-            Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.MINUTE, LOCK_TIME_MINUTES);
-            Date lockTime = calendar.getTime();
-
-            // 设置锁定时间
-            userMapper.setLockTime(user.getId(), lockTime);
-        }
-    }
-
-    @Override
-    public void resetLoginFailCount(User user) {
-        userMapper.resetLoginFailCount(user.getId());
-        // 清除锁定时间
-        userMapper.setLockTime(user.getId(), null);
-    }
-
-    @Override
-    public User getUserInfo(Long userId) {
-        return userMapper.selectById(userId);
+    public User getUserInfo(Long id) {
+        return userMapper.selectById(id);
     }
 
     @Override
     public PageResult<User> listUsers(String keyword, Integer status, String startDate, String endDate, Integer pageNum, Integer pageSize) {
-        // 计算分页参数
-        Integer offset = (pageNum - 1) * pageSize;
-        Integer limit = pageSize;
+        // 计算偏移量
+        int offset = (pageNum - 1) * pageSize;
 
         // 查询用户列表
-        List<User> users = userMapper.selectList(keyword, status, startDate, endDate, offset, limit);
+        List<User> users = userMapper.selectList(keyword, status, startDate, endDate, offset, pageSize);
 
         // 查询总数
         Long total = userMapper.selectCount(keyword, status, startDate, endDate);
@@ -256,26 +170,76 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public int addUser(User user) {
-        // 设置默认值
-        if (user.getStatus() == null) {
-            user.setStatus(1);
-        }
-        user.setCreateTime(new Date());
-        user.setUpdateTime(new Date());
-        user.setRegisterTime(new Date());
-
         return userMapper.insert(user);
     }
 
     @Override
+    @Transactional
     public int updateUser(User user) {
+        return userMapper.update(user);
+    }
+
+    @Override
+    @Transactional
+    public int deleteUser(Long id) {
+        // 先删除用户角色关联
+        userRoleMapper.deleteByUserId(id);
+        // 再删除用户
+        return userMapper.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public int resetPassword(Long id, String password) {
+        User user = new User();
+        user.setId(id);
+        user.setPassword(password);
         user.setUpdateTime(new Date());
         return userMapper.update(user);
     }
 
     @Override
-    public int deleteUser(Long id) {
-        return userMapper.deleteById(id);
+    @Transactional
+    public int changeStatus(Long id, Integer status) {
+        User user = new User();
+        user.setId(id);
+        user.setStatus(status);
+        user.setUpdateTime(new Date());
+        return userMapper.update(user);
+    }
+
+    /**
+     * 处理登录失败
+     */
+    private void handleLoginFailure(User user) {
+        // 增加登录失败次数
+        userMapper.incrementLoginFailCount(user.getId());
+
+        // 重新获取用户信息，以获取最新的失败次数
+        user = userMapper.selectById(user.getId());
+
+        // 如果失败次数达到5次，则锁定账户10分钟
+        if (user.getLoginFailCount() >= 5) {
+            Date lockTime = new Date(System.currentTimeMillis() + 10 * 60 * 1000); // 10分钟后
+            userMapper.setLockTime(user.getId(), lockTime);
+        }
+    }
+
+    /**
+     * 重置登录失败计数
+     */
+    private void resetLoginFailCount(User user) {
+        userMapper.resetLoginFailCount(user.getId());
+    }
+
+    /**
+     * 更新最后登录时间
+     */
+    private void updateLastLoginTime(Long userId) {
+        // 获取当前时间
+        String currentTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        userMapper.updateLastLoginTime(userId, currentTime);
     }
 }

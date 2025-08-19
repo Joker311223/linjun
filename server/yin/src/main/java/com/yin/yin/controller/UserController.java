@@ -252,4 +252,121 @@ public class UserController {
     public Result<?> logout() {
         return Result.success(null, "退出成功");
     }
+
+    /**
+     * 根据ID获取用户
+     */
+    @GetMapping("/{id}")
+    public Result<?> getUserById(@PathVariable Long id) {
+        User user = userService.getUserInfo(id);
+        if (user != null) {
+            return Result.success(user);
+        } else {
+            return Result.failed("用户不存在");
+        }
+    }
+
+    /**
+     * 添加用户
+     */
+    @PostMapping
+    public Result<?> addUser(@RequestBody User user) {
+        // 检查用户名是否已存在
+        User existingUser = userService.getUserByUsername(user.getUsername());
+        if (existingUser != null) {
+            return Result.failed("用户名已存在");
+        }
+
+        // 设置创建时间等信息
+        user.setRegisterTime(new Date());
+        user.setCreateTime(new Date());
+        user.setUpdateTime(new Date());
+
+        // 保存用户
+        int result = userService.addUser(user);
+        if (result > 0) {
+            // 分配角色
+            if (user.getRoleIds() != null && !user.getRoleIds().isEmpty()) {
+                roleService.assignRolesToUser(user.getId(), user.getRoleIds());
+            }
+            return Result.success(null, "添加用户成功");
+        } else {
+            return Result.failed("添加用户失败");
+        }
+    }
+
+    /**
+     * 更新用户
+     */
+    @PutMapping
+    public Result<?> updateUser(@RequestBody User user) {
+        // 设置更新时间
+        user.setUpdateTime(new Date());
+
+        // 更新用户
+        int result = userService.updateUser(user);
+        if (result > 0) {
+            // 更新角色
+            if (user.getRoleIds() != null) {
+                roleService.assignRolesToUser(user.getId(), user.getRoleIds());
+            }
+            return Result.success(null, "更新用户成功");
+        } else {
+            return Result.failed("更新用户失败");
+        }
+    }
+
+    /**
+     * 删除用户
+     */
+    @DeleteMapping("/{id}")
+    public Result<?> deleteUser(@PathVariable Long id) {
+        int result = userService.deleteUser(id);
+        if (result > 0) {
+            return Result.success(null, "删除用户成功");
+        } else {
+            return Result.failed("删除用户失败");
+        }
+    }
+
+    /**
+     * 重置用户密码
+     */
+    @PutMapping("/{id}/password")
+    public Result<?> resetPassword(@PathVariable Long id, @RequestBody Map<String, String> params) {
+        String password = params.get("password");
+        if (password == null || password.trim().isEmpty()) {
+            return Result.failed("密码不能为空");
+        }
+
+        // 密码强度校验
+        if (!PASSWORD_PATTERN.matcher(password).matches()) {
+            return Result.failed("密码必须包含字母、数字和特殊字符，且长度至少为8位");
+        }
+
+        int result = userService.resetPassword(id, password);
+        if (result > 0) {
+            return Result.success(null, "重置密码成功");
+        } else {
+            return Result.failed("重置密码失败");
+        }
+    }
+
+    /**
+     * 修改用户状态
+     */
+    @PutMapping("/{id}/status")
+    public Result<?> changeStatus(@PathVariable Long id, @RequestBody Map<String, Integer> params) {
+        Integer status = params.get("status");
+        if (status == null || (status != 0 && status != 1)) {
+            return Result.failed("状态值无效");
+        }
+
+        int result = userService.changeStatus(id, status);
+        if (result > 0) {
+            return Result.success(null, "修改状态成功");
+        } else {
+            return Result.failed("修改状态失败");
+        }
+    }
 }

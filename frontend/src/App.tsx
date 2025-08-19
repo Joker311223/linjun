@@ -11,7 +11,17 @@ import OrderList from './pages/orders/list';
 import OrderCreate from './pages/orders/create';
 import OrderStatistics from './pages/orders/statistics';
 import UserList from './pages/users/list';
+import UserCreate from './pages/users/create';
+import UserEdit from './pages/users/edit';
+import UserDetail from './pages/users/detail';
 import UserStatistics from './pages/users/statistics';
+import RoleList from './pages/roles/list';
+import RoleCreate from './pages/roles/create';
+import RoleEdit from './pages/roles/edit';
+import RolePermissions from './pages/roles/permissions';
+import PermissionList from './pages/permissions/list';
+import PermissionCreate from './pages/permissions/create';
+import PermissionEdit from './pages/permissions/edit';
 import DouyinSource from './pages/sources/douyin';
 import WechatSource from './pages/sources/wechat';
 import TaobaoSource from './pages/sources/taobao';
@@ -125,8 +135,25 @@ const App: React.FC = () => {
           {/* 用户管理路由 */}
           <Route path="users">
             <Route path="list" element={<PermissionRoute element={<UserList />} permissionCode="users:list" />} />
-            <Route path="detail/:id" element={<PermissionRoute element={<div>用户详情页面</div>} permissionCode="users:detail" />} />
+            <Route path="create" element={<PermissionRoute element={<UserCreate />} permissionCode="users:create" />} />
+            <Route path="edit/:id" element={<PermissionRoute element={<UserEdit />} permissionCode="users:edit" />} />
+            <Route path="detail/:id" element={<PermissionRoute element={<UserDetail />} permissionCode="users:detail" />} />
             <Route path="statistics" element={<PermissionRoute element={<UserStatistics />} permissionCode="users:statistics" />} />
+          </Route>
+
+          {/* 角色管理路由 */}
+          <Route path="roles">
+            <Route path="list" element={<PermissionRoute element={<RoleList />} permissionCode="system:role:list" />} />
+            <Route path="create" element={<PermissionRoute element={<RoleCreate />} permissionCode="system:role:create" />} />
+            <Route path="edit/:id" element={<PermissionRoute element={<RoleEdit />} permissionCode="system:role:edit" />} />
+            <Route path="permissions/:id" element={<PermissionRoute element={<RolePermissions />} permissionCode="system:role:permission" />} />
+          </Route>
+
+          {/* 权限管理路由 */}
+          <Route path="permissions">
+            <Route path="list" element={<PermissionRoute element={<PermissionList />} permissionCode="system:permission:list" />} />
+            <Route path="create" element={<PermissionRoute element={<PermissionCreate />} permissionCode="system:permission:create" />} />
+            <Route path="edit/:id" element={<PermissionRoute element={<PermissionEdit />} permissionCode="system:permission:edit" />} />
           </Route>
 
           {/* 系统设置路由 */}

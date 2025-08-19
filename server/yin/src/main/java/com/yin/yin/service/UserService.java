@@ -8,19 +8,24 @@ import com.yin.yin.model.User;
  */
 public interface UserService {
     /**
+     * 根据用户名查询用户
+     */
+    User getUserByUsername(String username);
+
+    /**
      * 用户登录
      */
     User login(String username, String password);
 
     /**
-     * 获取用户信息
+     * 检查账户是否被锁定
      */
-    User getUserInfo(Long userId);
+    boolean isAccountLocked(User user);
 
     /**
-     * 根据用户名获取用户
+     * 获取用户信息
      */
-    User getUserByUsername(String username);
+    User getUserInfo(Long id);
 
     /**
      * 分页查询用户列表
@@ -48,17 +53,12 @@ public interface UserService {
     int deleteUser(Long id);
 
     /**
-     * 检查账户是否被锁定
+     * 重置用户密码
      */
-    boolean isAccountLocked(User user);
+    int resetPassword(Long id, String password);
 
     /**
-     * 处理登录失败
+     * 修改用户状态
      */
-    void handleLoginFailure(User user);
-
-    /**
-     * 重置登录失败计数
-     */
-    void resetLoginFailCount(User user);
+    int changeStatus(Long id, Integer status);
 }

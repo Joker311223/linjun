@@ -11,7 +11,9 @@ import {
   LogoutOutlined,
   BellOutlined,
   ShopOutlined,
-  TagOutlined
+  TagOutlined,
+  KeyOutlined,
+  SafetyCertificateOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import '../assets/styles/global.css';
@@ -154,6 +156,12 @@ const MainLayout: React.FC = () => {
           permission: 'users:list'
         },
         {
+          key: 'users-create',
+          label: '创建用户',
+          path: '/users/create',
+          permission: 'users:create'
+        },
+        {
           key: 'users-statistics',
           label: '用户统计',
           path: '/users/statistics',
@@ -162,11 +170,61 @@ const MainLayout: React.FC = () => {
       ]
     },
     {
-      key: 'settings',
+      key: 'system',
       icon: <SettingOutlined />,
-      label: '系统设置',
-      path: '/settings',
-      permission: 'system:settings'
+      label: '系统管理',
+      path: '/system',
+      permission: 'system:view',
+      children: [
+        {
+          key: 'roles',
+          icon: <SafetyCertificateOutlined />,
+          label: '角色管理',
+          path: '/roles',
+          permission: 'system:role:view',
+          children: [
+            {
+              key: 'roles-list',
+              label: '角色列表',
+              path: '/roles/list',
+              permission: 'system:role:list'
+            },
+            {
+              key: 'roles-create',
+              label: '创建角色',
+              path: '/roles/create',
+              permission: 'system:role:create'
+            }
+          ]
+        },
+        {
+          key: 'permissions',
+          icon: <KeyOutlined />,
+          label: '权限管理',
+          path: '/permissions',
+          permission: 'system:permission:view',
+          children: [
+            {
+              key: 'permissions-list',
+              label: '权限列表',
+              path: '/permissions/list',
+              permission: 'system:permission:list'
+            },
+            {
+              key: 'permissions-create',
+              label: '创建权限',
+              path: '/permissions/create',
+              permission: 'system:permission:create'
+            }
+          ]
+        },
+        {
+          key: 'settings',
+          label: '系统设置',
+          path: '/settings',
+          permission: 'system:settings'
+        }
+      ]
     }
   ];
 
@@ -196,32 +254,32 @@ const MainLayout: React.FC = () => {
     let currentBreadcrumbs: { title: string; path: string }[] = [{ title: '首页', path: '/' }];
 
     // 遍历菜单项查找匹配的路径
-    for (const item of menuItems) {
-      if (item.path === path) {
-        currentKey = item.key;
-        currentBreadcrumbs = [
-          { title: '首页', path: '/' },
-          { title: item.label, path: item.path }
-        ];
-        break;
-      }
+    const findMatchingPath = (items: any[], parentPath: string[] = []) => {
+      for (const item of items) {
+        const currentPath = [...parentPath, item.label];
 
-      // 检查子菜单
-      if (item.children) {
-        for (const child of item.children) {
-          if (child.path === path) {
-            currentKey = child.key;
-            currentBreadcrumbs = [
-              { title: '首页', path: '/' },
-              { title: item.label, path: item.path },
-              { title: child.label, path: child.path }
-            ];
-            break;
-          }
+        if (item.path === path) {
+          currentKey = item.key;
+          currentBreadcrumbs = [
+            { title: '首页', path: '/' },
+            ...currentPath.map((label, index) => ({
+              title: label,
+              path: index === currentPath.length - 1 ? item.path : ''
+            }))
+          ];
+          return true;
+        }
+
+        // 检查子菜单
+        if (item.children) {
+          const found = findMatchingPath(item.children, currentPath);
+          if (found) return true;
         }
       }
-    }
+      return false;
+    };
 
+    findMatchingPath(menuItems);
     setSelectedKeys([currentKey]);
     setBreadcrumbs(currentBreadcrumbs);
   }, [location.pathname]);
@@ -229,21 +287,24 @@ const MainLayout: React.FC = () => {
   // 处理菜单点击事件
   const handleMenuClick = (key: string) => {
     // 查找对应的路径
-    for (const item of menuItems) {
-      if (item.key === key) {
-        navigate(item.path);
-        return;
-      }
+    const findPath = (items: any[]): string | null => {
+      for (const item of items) {
+        if (item.key === key) {
+          return item.path;
+        }
 
-      // 检查子菜单
-      if (item.children) {
-        for (const child of item.children) {
-          if (child.key === key) {
-            navigate(child.path);
-            return;
-          }
+        // 检查子菜单
+        if (item.children) {
+          const path = findPath(item.children);
+          if (path) return path;
         }
       }
+      return null;
+    };
+
+    const path = findPath(menuItems);
+    if (path) {
+      navigate(path);
     }
   };
 

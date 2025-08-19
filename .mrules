@@ -1,0 +1,4 @@
+## 项目结构
+fontend目录下面是前端项目，react实现。
+server目录下面是后端项目，springboot实现。mybatis，mysql
+
