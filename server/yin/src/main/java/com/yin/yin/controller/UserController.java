@@ -2,7 +2,11 @@ package com.yin.yin.controller;
 
 import com.yin.yin.common.PageResult;
 import com.yin.yin.common.Result;
+import com.yin.yin.model.Permission;
+import com.yin.yin.model.Role;
 import com.yin.yin.model.User;
+import com.yin.yin.service.PermissionService;
+import com.yin.yin.service.RoleService;
 import com.yin.yin.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -29,6 +34,12 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private RoleService roleService;
+
+    @Autowired
+    private PermissionService permissionService;
 
     /**
      * 用户注册
@@ -145,14 +156,56 @@ public class UserController {
      * 获取用户信息
      */
     @GetMapping("/info")
-    public Result<?> getUserInfo() {
-        // 这里简化处理，直接返回ID为1的用户
-        User user = userService.getUserInfo(1L);
+    public Result<?> getUserInfo(@RequestParam(required = false) Long userId) {
+        // 如果没有传入userId，则默认返回ID为1的用户
+        if (userId == null) {
+            userId = 1L;
+        }
+
+        User user = userService.getUserInfo(userId);
         if (user != null) {
-            return Result.success(user);
+            // 获取用户角色
+            List<Role> roles = roleService.getRolesByUserId(userId);
+            // 获取用户权限
+            List<Permission> permissions = permissionService.getPermissionsByUserId(userId);
+
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("user", user);
+            userInfo.put("roles", roles);
+            userInfo.put("permissions", permissions);
+
+            return Result.success(userInfo);
         } else {
             return Result.failed("获取用户信息失败");
         }
+    }
+
+    /**
+     * 获取当前用户的权限列表
+     */
+    @GetMapping("/permissions")
+    public Result<?> getCurrentUserPermissions(@RequestParam(required = false) Long userId) {
+        // 如果没有传入userId，则默认返回ID为1的用户
+        if (userId == null) {
+            userId = 1L;
+        }
+
+        List<Permission> permissions = permissionService.getPermissionsByUserId(userId);
+        return Result.success(permissions);
+    }
+
+    /**
+     * 获取当前用户的角色列表
+     */
+    @GetMapping("/roles")
+    public Result<?> getCurrentUserRoles(@RequestParam(required = false) Long userId) {
+        // 如果没有传入userId，则默认返回ID为1的用户
+        if (userId == null) {
+            userId = 1L;
+        }
+
+        List<Role> roles = roleService.getRolesByUserId(userId);
+        return Result.success(roles);
     }
 
     /**

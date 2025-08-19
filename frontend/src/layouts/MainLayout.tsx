@@ -16,6 +16,7 @@ import {
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import '../assets/styles/global.css';
 import Logo from '../assets/images/logo';
+import { getUserPermissions } from '../services/userService';
 
 const { Header, Sider, Content } = Layout;
 
@@ -23,6 +24,7 @@ const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>(['dashboard']);
   const [breadcrumbs, setBreadcrumbs] = useState<{ title: string; path: string }[]>([]);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
   const { token } = theme.useToken();
@@ -33,23 +35,27 @@ const MainLayout: React.FC = () => {
       key: 'dashboard',
       icon: <DashboardOutlined />,
       label: '仪表盘',
-      path: '/'
+      path: '/',
+      permission: 'dashboard:view'
     },
     {
       key: 'packages',
       icon: <AppstoreOutlined />,
       label: '套餐管理',
       path: '/packages',
+      permission: 'packages:view',
       children: [
         {
           key: 'packages-list',
           label: '套餐列表',
-          path: '/packages/list'
+          path: '/packages/list',
+          permission: 'packages:list'
         },
         {
           key: 'packages-create',
           label: '创建套餐',
-          path: '/packages/create'
+          path: '/packages/create',
+          permission: 'packages:create'
         }
       ]
     },
@@ -58,16 +64,19 @@ const MainLayout: React.FC = () => {
       icon: <ShoppingCartOutlined />,
       label: '营销活动',
       path: '/campaigns',
+      permission: 'campaigns:view',
       children: [
         {
           key: 'campaigns-list',
           label: '活动列表',
-          path: '/campaigns/list'
+          path: '/campaigns/list',
+          permission: 'campaigns:list'
         },
         {
           key: 'campaigns-create',
           label: '创建活动',
-          path: '/campaigns/create'
+          path: '/campaigns/create',
+          permission: 'campaigns:create'
         }
       ]
     },
@@ -76,16 +85,19 @@ const MainLayout: React.FC = () => {
       icon: <ShoppingCartOutlined />,
       label: '订单管理',
       path: '/orders',
+      permission: 'orders:view',
       children: [
         {
           key: 'orders-list',
           label: '订单列表',
-          path: '/orders/list'
+          path: '/orders/list',
+          permission: 'orders:list'
         },
         {
           key: 'orders-statistics',
           label: '订单统计',
-          path: '/orders/statistics'
+          path: '/orders/statistics',
+          permission: 'orders:statistics'
         }
       ]
     },
@@ -94,31 +106,37 @@ const MainLayout: React.FC = () => {
       icon: <ShopOutlined />,
       label: '订单来源',
       path: '/sources',
+      permission: 'sources:view',
       children: [
         {
           key: 'sources-douyin',
           label: '抖音',
-          path: '/sources/douyin'
+          path: '/sources/douyin',
+          permission: 'sources:douyin'
         },
         {
           key: 'sources-wechat',
           label: '微信',
-          path: '/sources/wechat'
+          path: '/sources/wechat',
+          permission: 'sources:wechat'
         },
         {
           key: 'sources-taobao',
           label: '淘宝',
-          path: '/sources/taobao'
+          path: '/sources/taobao',
+          permission: 'sources:taobao'
         },
         {
           key: 'sources-xiaohongshu',
           label: '小红书',
-          path: '/sources/xiaohongshu'
+          path: '/sources/xiaohongshu',
+          permission: 'sources:xiaohongshu'
         },
         {
           key: 'sources-other',
           label: '其他渠道',
-          path: '/sources/other'
+          path: '/sources/other',
+          permission: 'sources:other'
         }
       ]
     },
@@ -127,16 +145,19 @@ const MainLayout: React.FC = () => {
       icon: <UserOutlined />,
       label: '用户管理',
       path: '/users',
+      permission: 'users:view',
       children: [
         {
           key: 'users-list',
           label: '用户列表',
-          path: '/users/list'
+          path: '/users/list',
+          permission: 'users:list'
         },
         {
           key: 'users-statistics',
           label: '用户统计',
-          path: '/users/statistics'
+          path: '/users/statistics',
+          permission: 'users:statistics'
         }
       ]
     },
@@ -144,9 +165,27 @@ const MainLayout: React.FC = () => {
       key: 'settings',
       icon: <SettingOutlined />,
       label: '系统设置',
-      path: '/settings'
+      path: '/settings',
+      permission: 'system:settings'
     }
   ];
+
+  // 获取用户权限
+  useEffect(() => {
+    const fetchUserPermissions = async () => {
+      try {
+        const response = await getUserPermissions();
+        if (response.data.code === 200) {
+          const permissions = response.data.data || [];
+          setUserPermissions(permissions.map((p: any) => p.code));
+        }
+      } catch (error) {
+        console.error('获取权限失败:', error);
+      }
+    };
+
+    fetchUserPermissions();
+  }, []);
 
   // 根据路径更新选中的菜单项和面包屑
   useEffect(() => {
@@ -242,9 +281,39 @@ const MainLayout: React.FC = () => {
     />
   );
 
+  // 检查用户是否有权限访问菜单项
+  const hasPermission = (permission: string): boolean => {
+    // 如果没有设置权限要求，或者用户有通配符权限，则允许访问
+    if (!permission || userPermissions.includes('*:*:*')) {
+      return true;
+    }
+
+    return userPermissions.includes(permission);
+  };
+
+  // 过滤菜单项，只显示用户有权限的菜单
+  const filterMenuItems = (items: any[]): any[] => {
+    return items
+      .filter(item => hasPermission(item.permission))
+      .map(item => {
+        const newItem = { ...item };
+        if (newItem.children) {
+          const filteredChildren = filterMenuItems(newItem.children);
+          if (filteredChildren.length > 0) {
+            newItem.children = filteredChildren;
+          } else {
+            delete newItem.children;
+          }
+        }
+        return newItem;
+      });
+  };
+
   // 将菜单项转换为Ant Design Menu组件需要的格式
   const getMenuItems = (items: any[]): any[] => {
-    return items.map(item => {
+    const filteredItems = filterMenuItems(items);
+
+    return filteredItems.map(item => {
       if (item.children) {
         return {
           key: item.key,

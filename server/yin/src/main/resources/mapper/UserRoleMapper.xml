@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yin.yin.mapper.UserRoleMapper">
+
+    <resultMap id="BaseResultMap" type="com.yin.yin.model.UserRole">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="role_id" property="roleId" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_id, role_id, create_time
+    </sql>
+
+    <!-- 根据用户ID查询用户角色关联 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM user_role
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 根据角色ID查询用户角色关联 -->
+    <select id="selectByRoleId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM user_role
+        WHERE role_id = #{roleId}
+    </select>
+
+    <!-- 插入用户角色关联 -->
+    <insert id="insert" parameterType="com.yin.yin.model.UserRole" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_role (
+            user_id, role_id, create_time
+        ) VALUES (
+            #{userId}, #{roleId}, #{createTime}
+        )
+    </insert>
+
+    <!-- 批量插入用户角色关联 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO user_role (
+            user_id, role_id, create_time
+        ) VALUES
+        <foreach collection="userRoles" item="item" separator=",">
+            (#{item.userId}, #{item.roleId}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <!-- 根据用户ID删除用户角色关联 -->
+    <delete id="deleteByUserId">
+        DELETE FROM user_role WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 根据角色ID删除用户角色关联 -->
+    <delete id="deleteByRoleId">
+        DELETE FROM user_role WHERE role_id = #{roleId}
+    </delete>
+
+    <!-- 根据用户ID和角色ID删除用户角色关联 -->
+    <delete id="deleteByUserIdAndRoleId">
+        DELETE FROM user_role WHERE user_id = #{userId} AND role_id = #{roleId}
+    </delete>
+
+</mapper>

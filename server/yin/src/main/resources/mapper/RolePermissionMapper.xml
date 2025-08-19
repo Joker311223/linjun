@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yin.yin.mapper.RolePermissionMapper">
+
+    <resultMap id="BaseResultMap" type="com.yin.yin.model.RolePermission">
+        <id column="id" property="id" />
+        <result column="role_id" property="roleId" />
+        <result column="permission_id" property="permissionId" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, role_id, permission_id, create_time
+    </sql>
+
+    <!-- 根据角色ID查询角色权限关联 -->
+    <select id="selectByRoleId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM role_permission
+        WHERE role_id = #{roleId}
+    </select>
+
+    <!-- 根据权限ID查询角色权限关联 -->
+    <select id="selectByPermissionId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM role_permission
+        WHERE permission_id = #{permissionId}
+    </select>
+
+    <!-- 插入角色权限关联 -->
+    <insert id="insert" parameterType="com.yin.yin.model.RolePermission" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO role_permission (
+            role_id, permission_id, create_time
+        ) VALUES (
+            #{roleId}, #{permissionId}, #{createTime}
+        )
+    </insert>
+
+    <!-- 批量插入角色权限关联 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO role_permission (
+            role_id, permission_id, create_time
+        ) VALUES
+        <foreach collection="rolePermissions" item="item" separator=",">
+            (#{item.roleId}, #{item.permissionId}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <!-- 根据角色ID删除角色权限关联 -->
+    <delete id="deleteByRoleId">
+        DELETE FROM role_permission WHERE role_id = #{roleId}
+    </delete>
+
+    <!-- 根据权限ID删除角色权限关联 -->
+    <delete id="deleteByPermissionId">
+        DELETE FROM role_permission WHERE permission_id = #{permissionId}
+    </delete>
+
+    <!-- 根据角色ID和权限ID删除角色权限关联 -->
+    <delete id="deleteByRoleIdAndPermissionId">
+        DELETE FROM role_permission WHERE role_id = #{roleId} AND permission_id = #{permissionId}
+    </delete>
+
+</mapper>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/Login';
@@ -18,6 +18,10 @@ import TaobaoSource from './pages/sources/taobao';
 import XiaohongshuSource from './pages/sources/xiaohongshu';
 import OtherSource from './pages/sources/other';
 import Settings from './pages/settings';
+import AuthWrapper from './components/AuthWrapper';
+import { getUserPermissions } from './services/userService';
+import { message } from 'antd';
+import NoPermission from './pages/NoPermission';
 
 // 路由守卫组件
 const PrivateRoute: React.FC<{ element: React.ReactNode }> = ({ element }) => {
@@ -31,15 +35,55 @@ const PrivateRoute: React.FC<{ element: React.ReactNode }> = ({ element }) => {
   return <>{element}</>;
 };
 
+// 权限路由组件
+const PermissionRoute: React.FC<{ element: React.ReactNode, permissionCode: string }> = ({ element, permissionCode }) => {
+  return (
+    <AuthWrapper
+      permissionCode={permissionCode}
+      fallback={<NoPermission />}
+    >
+      {element}
+    </AuthWrapper>
+  );
+};
+
 const App: React.FC = () => {
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
   useEffect(() => {
-    // 在这里可以进行一些全局初始化操作
+    // 获取用户权限
+    const fetchUserPermissions = async () => {
+      try {
+        const response = await getUserPermissions();
+        if (response.data.code === 200) {
+          const permissions = response.data.data || [];
+          setUserPermissions(permissions.map((p: any) => p.code));
+        }
+      } catch (error) {
+        console.error('获取权限失败:', error);
+        message.error('获取权限信息失败');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (localStorage.getItem('token')) {
+      fetchUserPermissions();
+    } else {
+      setLoading(false);
+    }
   }, []);
+
+  if (loading) {
+    return <div>加载中...</div>;
+  }
 
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/no-permission" element={<NoPermission />} />
 
         {/* 主布局路由 */}
         <Route path="/" element={<PrivateRoute element={<MainLayout />} />}>
@@ -47,46 +91,46 @@ const App: React.FC = () => {
 
           {/* 套餐管理路由 */}
           <Route path="packages">
-            <Route path="list" element={<PackageList />} />
-            <Route path="create" element={<PackageCreate />} />
-            <Route path="edit/:id" element={<div>编辑套餐页面</div>} />
-            <Route path="detail/:id" element={<div>套餐详情页面</div>} />
+            <Route path="list" element={<PermissionRoute element={<PackageList />} permissionCode="packages:list" />} />
+            <Route path="create" element={<PermissionRoute element={<PackageCreate />} permissionCode="packages:create" />} />
+            <Route path="edit/:id" element={<PermissionRoute element={<div>编辑套餐页面</div>} permissionCode="packages:edit" />} />
+            <Route path="detail/:id" element={<PermissionRoute element={<div>套餐详情页面</div>} permissionCode="packages:detail" />} />
           </Route>
 
           {/* 营销活动路由 */}
           <Route path="campaigns">
-            <Route path="list" element={<CampaignList />} />
-            <Route path="create" element={<CampaignCreate />} />
-            <Route path="edit/:id" element={<div>编辑活动页面</div>} />
-            <Route path="detail/:id" element={<div>活动详情页面</div>} />
+            <Route path="list" element={<PermissionRoute element={<CampaignList />} permissionCode="campaigns:list" />} />
+            <Route path="create" element={<PermissionRoute element={<CampaignCreate />} permissionCode="campaigns:create" />} />
+            <Route path="edit/:id" element={<PermissionRoute element={<div>编辑活动页面</div>} permissionCode="campaigns:edit" />} />
+            <Route path="detail/:id" element={<PermissionRoute element={<div>活动详情页面</div>} permissionCode="campaigns:detail" />} />
           </Route>
 
           {/* 订单管理路由 */}
           <Route path="orders">
-            <Route path="list" element={<OrderList />} />
-            <Route path="create" element={<OrderCreate />} />
-            <Route path="detail/:id" element={<div>订单详情页面</div>} />
-            <Route path="statistics" element={<OrderStatistics />} />
+            <Route path="list" element={<PermissionRoute element={<OrderList />} permissionCode="orders:list" />} />
+            <Route path="create" element={<PermissionRoute element={<OrderCreate />} permissionCode="orders:create" />} />
+            <Route path="detail/:id" element={<PermissionRoute element={<div>订单详情页面</div>} permissionCode="orders:detail" />} />
+            <Route path="statistics" element={<PermissionRoute element={<OrderStatistics />} permissionCode="orders:statistics" />} />
           </Route>
 
           {/* 订单来源路由 */}
           <Route path="sources">
-            <Route path="douyin" element={<DouyinSource />} />
-            <Route path="wechat" element={<WechatSource />} />
-            <Route path="taobao" element={<TaobaoSource />} />
-            <Route path="xiaohongshu" element={<XiaohongshuSource />} />
-            <Route path="other" element={<OtherSource />} />
+            <Route path="douyin" element={<PermissionRoute element={<DouyinSource />} permissionCode="sources:douyin" />} />
+            <Route path="wechat" element={<PermissionRoute element={<WechatSource />} permissionCode="sources:wechat" />} />
+            <Route path="taobao" element={<PermissionRoute element={<TaobaoSource />} permissionCode="sources:taobao" />} />
+            <Route path="xiaohongshu" element={<PermissionRoute element={<XiaohongshuSource />} permissionCode="sources:xiaohongshu" />} />
+            <Route path="other" element={<PermissionRoute element={<OtherSource />} permissionCode="sources:other" />} />
           </Route>
 
           {/* 用户管理路由 */}
           <Route path="users">
-            <Route path="list" element={<UserList />} />
-            <Route path="detail/:id" element={<div>用户详情页面</div>} />
-            <Route path="statistics" element={<UserStatistics />} />
+            <Route path="list" element={<PermissionRoute element={<UserList />} permissionCode="users:list" />} />
+            <Route path="detail/:id" element={<PermissionRoute element={<div>用户详情页面</div>} permissionCode="users:detail" />} />
+            <Route path="statistics" element={<PermissionRoute element={<UserStatistics />} permissionCode="users:statistics" />} />
           </Route>
 
           {/* 系统设置路由 */}
-          <Route path="settings" element={<Settings />} />
+          <Route path="settings" element={<PermissionRoute element={<Settings />} permissionCode="system:settings" />} />
 
           {/* 404页面 */}
           <Route path="*" element={<div>404 Not Found</div>} />

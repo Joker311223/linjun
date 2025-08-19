@@ -20,8 +20,18 @@ export const register = (data: RegisterData): Promise<ApiResponse> => {
 };
 
 // 获取用户信息
-export const getUserInfo = (): Promise<ApiResponse> => {
-  return api.get('/api/user/info');
+export const getUserInfo = (userId?: number): Promise<ApiResponse> => {
+  return api.get('/api/user/info', { params: userId ? { userId } : {} });
+};
+
+// 获取用户权限
+export const getUserPermissions = (userId?: number): Promise<ApiResponse> => {
+  return api.get('/api/user/permissions', { params: userId ? { userId } : {} });
+};
+
+// 获取用户角色
+export const getUserRoles = (userId?: number): Promise<ApiResponse> => {
+  return api.get('/api/user/roles', { params: userId ? { userId } : {} });
 };
 
 // 获取用户列表

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yin.yin.mapper.PermissionMapper">
+
+    <resultMap id="BaseResultMap" type="com.yin.yin.model.Permission">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="code" property="code" />
+        <result column="type" property="type" />
+        <result column="path" property="path" />
+        <result column="parent_id" property="parentId" />
+        <result column="sort" property="sort" />
+        <result column="icon" property="icon" />
+        <result column="status" property="status" />
+        <result column="description" property="description" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, code, type, path, parent_id, sort, icon, status, description, create_time, update_time
+    </sql>
+
+    <!-- 根据ID查询权限 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM permission
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查询所有权限 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM permission
+        ORDER BY sort ASC
+    </select>
+
+    <!-- 根据角色ID查询权限列表 -->
+    <select id="selectByRoleId" resultMap="BaseResultMap">
+        SELECT p.*
+        FROM permission p
+        INNER JOIN role_permission rp ON p.id = rp.permission_id
+        WHERE rp.role_id = #{roleId}
+        ORDER BY p.sort ASC
+    </select>
+
+    <!-- 根据用户ID查询权限列表 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT DISTINCT p.*
+        FROM permission p
+        INNER JOIN role_permission rp ON p.id = rp.permission_id
+        INNER JOIN user_role ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = #{userId}
+        ORDER BY p.sort ASC
+    </select>
+
+    <!-- 插入权限 -->
+    <insert id="insert" parameterType="com.yin.yin.model.Permission" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO permission (
+            name, code, type, path, parent_id, sort, icon, status, description, create_time, update_time
+        ) VALUES (
+            #{name}, #{code}, #{type}, #{path}, #{parentId}, #{sort}, #{icon}, #{status}, #{description}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <!-- 更新权限 -->
+    <update id="update" parameterType="com.yin.yin.model.Permission">
+        UPDATE permission
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="code != null">code = #{code},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="path != null">path = #{path},</if>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除权限 -->
+    <delete id="deleteById">
+        DELETE FROM permission WHERE id = #{id}
+    </delete>
+
+</mapper>
