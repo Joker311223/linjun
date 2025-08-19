@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Form, Input, Button, Card, Image, message, Typography, Tabs } from 'antd';
 import { UserOutlined, LockOutlined, PhoneOutlined, MailOutlined, KeyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { login, register } from '../services/userService';
+import { login, register, getUserPermissions } from '../services/userService';
+import { setCachedPermissions } from '../services/permissionCache';
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
@@ -26,14 +27,36 @@ const Login: React.FC = () => {
   const [activeTab, setActiveTab] = useState('login');
   const navigate = useNavigate();
 
+  // 获取并缓存用户权限
+  const fetchAndCachePermissions = async (userId: number) => {
+    try {
+      const response = await getUserPermissions(userId);
+      if (response.data.code === 200) {
+        const permissions = response.data.data || [];
+        const permissionCodes = permissions.map((p: any) => p.code);
+        // 缓存权限，指定用户ID
+        setCachedPermissions(permissionCodes, userId);
+      }
+    } catch (error) {
+      console.error('获取权限失败:', error);
+    }
+  };
+
   const onLoginFinish = async (values: LoginFormData) => {
     setLoading(true);
     try {
       const response = await login(values.username, values.password);
       if (response.data.code === 200) {
         // 登录成功
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('userInfo', JSON.stringify(response.data));
+        const userData = response.data.data;
+        localStorage.setItem('token', userData.token);
+        localStorage.setItem('userInfo', JSON.stringify(userData));
+
+        // 获取并缓存用户权限
+        if (userData.userId) {
+          await fetchAndCachePermissions(userData.userId);
+        }
+
         message.success('登录成功');
         navigate('/');
       } else {

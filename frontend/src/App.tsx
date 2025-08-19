@@ -29,7 +29,7 @@ import XiaohongshuSource from './pages/sources/xiaohongshu';
 import OtherSource from './pages/sources/other';
 import Settings from './pages/settings';
 import AuthWrapper from './components/AuthWrapper';
-import { getUserPermissions } from './services/userService';
+import { getPermissions } from './services/permissionCache';
 import { message } from 'antd';
 import NoPermission from './pages/NoPermission';
 
@@ -62,14 +62,11 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // 获取用户权限
+    // 获取用户权限（从缓存获取）
     const fetchUserPermissions = async () => {
       try {
-        const response = await getUserPermissions();
-        if (response.data.code === 200) {
-          const permissions = response.data.data || [];
-          setUserPermissions(permissions.map((p: any) => p.code));
-        }
+        const permissions = await getPermissions();
+        setUserPermissions(permissions);
       } catch (error) {
         console.error('获取权限失败:', error);
         message.error('获取权限信息失败');

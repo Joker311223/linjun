@@ -18,7 +18,7 @@ import {
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import '../assets/styles/global.css';
 import Logo from '../assets/images/logo';
-import { getUserPermissions } from '../services/userService';
+import { getPermissions, hasPermission, clearCachedPermissions, getCurrentUserId } from '../services/permissionCache';
 
 const { Header, Sider, Content } = Layout;
 
@@ -228,15 +228,13 @@ const MainLayout: React.FC = () => {
     }
   ];
 
-  // 获取用户权限
+  // 获取用户权限（从缓存获取）
   useEffect(() => {
     const fetchUserPermissions = async () => {
       try {
-        const response = await getUserPermissions();
-        if (response.data.code === 200) {
-          const permissions = response.data.data || [];
-          setUserPermissions(permissions.map((p: any) => p.code));
-        }
+        const currentUserId = getCurrentUserId();
+        const permissions = await getPermissions(currentUserId);
+        setUserPermissions(permissions);
       } catch (error) {
         console.error('获取权限失败:', error);
       }
@@ -262,7 +260,7 @@ const MainLayout: React.FC = () => {
           currentKey = item.key;
           currentBreadcrumbs = [
             { title: '首页', path: '/' },
-            ...currentPath.map((label, index) => ({
+            ...currentPath.map((label: string, index: number) => ({
               title: label,
               path: index === currentPath.length - 1 ? item.path : ''
             }))
@@ -310,8 +308,20 @@ const MainLayout: React.FC = () => {
 
   // 处理退出登录
   const handleLogout = () => {
+    // 获取当前用户ID
+    const userId = getCurrentUserId();
+
     // 清除登录信息
     localStorage.removeItem('token');
+    localStorage.removeItem('userInfo');
+
+    // 清除权限缓存
+    if (userId) {
+      clearCachedPermissions(userId);
+    } else {
+      clearCachedPermissions();
+    }
+
     navigate('/login');
   };
 
@@ -343,19 +353,14 @@ const MainLayout: React.FC = () => {
   );
 
   // 检查用户是否有权限访问菜单项
-  const hasPermission = (permission: string): boolean => {
-    // 如果没有设置权限要求，或者用户有通配符权限，则允许访问
-    if (!permission || userPermissions.includes('*:*:*')) {
-      return true;
-    }
-
-    return userPermissions.includes(permission);
+  const checkPermission = (permission: string): boolean => {
+    return hasPermission(permission, userPermissions);
   };
 
   // 过滤菜单项，只显示用户有权限的菜单
   const filterMenuItems = (items: any[]): any[] => {
     return items
-      .filter(item => hasPermission(item.permission))
+      .filter(item => checkPermission(item.permission))
       .map(item => {
         const newItem = { ...item };
         if (newItem.children) {

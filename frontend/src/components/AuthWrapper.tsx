@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { message } from 'antd';
-import { getUserPermissions } from '../services/userService';
+import { getPermissions, hasPermission as checkPermission, getCurrentUserId } from '../services/permissionCache';
 
 interface AuthWrapperProps {
   permissionCode: string;
   children: React.ReactNode;
   fallback?: React.ReactNode;
+  userId?: number;
 }
 
 /**
@@ -14,34 +15,20 @@ interface AuthWrapperProps {
  * @param permissionCode 需要的权限代码
  * @param children 子组件
  * @param fallback 无权限时显示的内容，默认重定向到首页
+ * @param userId 可选的用户ID，默认使用当前登录用户
  */
-const AuthWrapper: React.FC<AuthWrapperProps> = ({ permissionCode, children, fallback }) => {
+const AuthWrapper: React.FC<AuthWrapperProps> = ({ permissionCode, children, fallback, userId }) => {
   const [hasPermission, setHasPermission] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const checkPermission = async () => {
+    const checkUserPermission = async () => {
       try {
-        const response = await getUserPermissions();
-        if (response.data.code === 200) {
-          const permissions = response.data.data || [];
-
-          // 检查是否有所需权限
-          const hasRequiredPermission = permissions.some((permission: any) => {
-            // 如果有通配符权限，直接返回true
-            if (permission.code === '*:*:*') {
-              return true;
-            }
-
-            // 检查具体权限
-            return permission.code === permissionCode;
-          });
-
-          setHasPermission(hasRequiredPermission);
-        } else {
-          message.error('获取权限信息失败');
-          setHasPermission(false);
-        }
+        // 如果没有提供userId，则使用当前登录用户ID
+        const currentUserId = userId || getCurrentUserId();
+        const permissions = await getPermissions(currentUserId);
+        const hasRequiredPermission = checkPermission(permissionCode, permissions);
+        setHasPermission(hasRequiredPermission);
       } catch (error) {
         console.error('权限检查错误:', error);
         setHasPermission(false);
@@ -50,8 +37,8 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ permissionCode, children, fal
       }
     };
 
-    checkPermission();
-  }, [permissionCode]);
+    checkUserPermission();
+  }, [permissionCode, userId]);
 
   if (loading) {
     return <div>加载中...</div>;
